@@ -1,0 +1,48 @@
+{
+  "source_masks": "masks",
+  "source_poses": "poses.csv",
+  "frame_filter": "none",
+  "reference": "../scan_60mm/scan_gt/scan_gt_smooth_mm.stl",
+  "units": "mm",
+  "coordinate_frame": "world",
+  "frames": 190,
+  "voxel_size_mm": 0.5,
+  "iso_value": 0.5,
+  "gaussian_sigma_mm": 0.5,
+  "sinc_iterations": 30,
+  "sinc_passband": 0.1,
+  "unknown_space": "treated as exterior; scan ends are closed at observed extent",
+  "raw": {
+    "vertices": 7954,
+    "triangles": 15904,
+    "boundary_or_nonmanifold_edges": 0,
+    "connected_components": 1,
+    "bounds_mm": [
+      -523.5667114257812,
+      -494.07763671875,
+      97.20589447021484,
+      165.8944854736328,
+      99.82209014892578,
+      109.78921508789062
+    ],
+    "volume_mm3": 1788.6983930791084,
+    "area_mm2": 1380.0284126275199
+  },
+  "smooth": {
+    "vertices": 7682,
+    "triangles": 15360,
+    "boundary_or_nonmanifold_edges": 0,
+    "connected_components": 1,
+    "bounds_mm": [
+      -523.3516235351562,
+      -494.48345947265625,
+      97.38613891601562,
+      165.7209014892578,
+      99.92588806152344,
+      109.72701263427734
+    ],
+    "volume_mm3": 1722.0017449547584,
+    "area_mm2": 1315.1212020465944
+  },
+  "volume_change_percent": -3.7287811283565175
+}

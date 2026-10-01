@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "length_unit": "mm",
+  "world_T_phantom_mm": [
+    [
+      -0.968950996281654,
+      0.24720212303536457,
+      -0.005007711213587684,
+      -510.1535816939456
+    ],
+    [
+      0.2471582496287859,
+      0.9689418087143846,
+      0.00803560612100079,
+      132.13233202462172
+    ],
+    [
+      0.00683859965380032,
+      0.0065484114184738975,
+      -0.9999551749266912,
+      117.8781386834605
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "phantom_T_world_mm": [
+    [
+      -0.968950996281654,
+      0.2471582496287859,
+      0.00683859965380032,
+      -527.7775385399692
+    ],
+    [
+      0.24720212303536457,
+      0.9689418087143846,
+      0.0065484114184738975,
+      -2.6894068620911376
+    ],
+    [
+      -0.005007711213587684,
+      0.00803560612100079,
+      -0.9999551749266912,
+      114.25638959955266
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "phantom_size_mm": [
+    70.0,
+    100.0,
+    40.0
+  ],
+  "probe_size_mm": [
+    40.0,
+    10.0
+  ],
+  "image_shape": [
+    480,
+    480
+  ],
+  "fov_mm": [
+    40.0,
+    40.0
+  ],
+  "reference_frame_count": 190,
+  "surface_residual_rms_mm": 0.00786786872839927,
+  "surface_residual_max_mm": 0.04333791729255706,
+  "vessel_bounds_phantom_mm": [
+    [
+      -7.565476105035025,
+      -35.26621183550648,
+      7.926554778619386
+    ],
+    [
+      4.808228547007465,
+      35.29129614279713,
+      17.930831236092747
+    ]
+  ],
+  "assumptions": {
+    "surface": "Mean original image +z is inward normal; mean origin fixes plane offset.",
+    "surface_x": "Mean original image +x, orthogonalized against inward normal.",
+    "footprint": "Assumed 40x10 mm; not measured in source data.",
+    "phantom_size": "Scan footprint and vessel bounds, 10 mm margin per side, rounded up to 10 mm; assumed 40 mm depth.",
+    "origin": "Centre of inferred top rectangle; +z into phantom.",
+    "contact": "Bottom centre on plane; penetration allowed; no deformation or acoustic coupling model.",
+    "mesh_extent": "Source reconstruction closes scan ends at observed extent; unseen vessel is not extrapolated."
+  }
+}

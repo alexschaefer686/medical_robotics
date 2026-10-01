@@ -1,0 +1,20 @@
+{
+  "task_config": "configs/tasks/longitudinal_phantom1.json",
+  "seed": 0,
+  "total_timesteps": 100000,
+  "learning_rate": 5e-05,
+  "buffer_size": 100000,
+  "learning_starts": 1000,
+  "batch_size": 64,
+  "gamma": 0.95,
+  "train_freq": 4,
+  "target_update_interval": 2000,
+  "exploration_fraction": 0.3,
+  "exploration_initial_eps": 1.0,
+  "exploration_final_eps": 0.05,
+  "eval_freq": 5000,
+  "n_eval_episodes": 1,
+  "checkpoint_freq": 20000,
+  "device": "auto",
+  "output_dir": "outputs/training/dqn_longitudinal"
+}

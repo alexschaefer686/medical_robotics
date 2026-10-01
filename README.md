@@ -1,0 +1,103 @@
+# View Transition RL
+
+A reinforcement learning project for ultrasound probe view transitions. The vessel phantom simulator generates segmentation masks from five-degree-of-freedom probe poses and provides an interactive desktop GUI. The first RL task transitions from a transverse to a longitudinal view on phantom 1, using a Gymnasium environment, DQN training, and policy evaluation.
+
+## Installation and commands
+
+No virtual environment is bundled. From the project directory:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[gui,rl]'
+python -m view_transition_rl sim gui
+```
+
+For only the headless simulator, install `python -m pip install -e .`. With dependencies available, source execution also works:
+
+```bash
+view-transition-rl sim gui
+view-transition-rl sim info
+view-transition-rl sim sample --output outputs/simulation/sample
+view-transition-rl sim --config configs/simulation/default.json gui
+PYTHONPATH=src python3 -m view_transition_rl sim gui
+```
+
+## Phantoms
+
+The GUI cycles through **PHANTOM 1 → 2 → 3 → 1**, resetting to each model's initial pose.
+
+- `reference`: the default vessel reconstructed from a real scan, with 190 reference frames.
+- `vessel_no_hole`: a vessel interpreted at its original millimetre scale, tilted downward by 8° along +Y, with 8 mm minimum cover in a 70×190×40 mm phantom.
+- `curved_arc`: a 4 mm diameter vessel with a 20 mm bending radius and 40 mm arc length, in a 100×100×40 mm phantom. At X=Y=Pitch=0 and Roll=0, no Yaw covers the entire central 30 mm target. Roll approximately 4.96° and Yaw 90° intersect the lumen along the entire target without translation.
+
+```bash
+python -m view_transition_rl sim --phantom vessel_no_hole gui
+python -m view_transition_rl sim --phantom vessel_no_hole sample --output outputs/simulation/vessel_no_hole
+python -m view_transition_rl sim --phantom curved_arc gui
+python examples/simulation/curved_arc_counterexample.py
+```
+
+Python accepts `PhantomEnv(phantom="vessel_no_hole")` or `PhantomEnv(phantom="curved_arc")`. Neither additional phantom has reference acquisition frames, so reference replay and evaluation are unsupported. The curved-arc demonstration includes masks, poses, a comparison image, a Yaw-scan CSV, and a JSON summary under `outputs/simulation/curved_arc_demo/`.
+
+All simulation data are bundled; the original GPIS project and acquisition directories are unnecessary. After installation, commands work from other working directories; explicit configuration and output paths are relative to the calling directory.
+
+## Project structure
+
+| Location | Responsibility and status |
+| --- | --- |
+| `src/view_transition_rl/simulation/` | Implemented geometry, probe motion, masks, GUI, bundled assets, and reconstruction comparison. |
+| `src/view_transition_rl/envs/` | Implemented phantom 1 task observations, actions, rewards, reset, and termination. |
+| `src/view_transition_rl/agents/` | Reserved for custom policies; current training uses SB3 directly. |
+| `src/view_transition_rl/training/` | Implemented SB3 DQN training, logs, checkpoints, and seeds. |
+| `src/view_transition_rl/evaluation/` | Implemented policy rollout, task metrics, and video rendering. |
+| `configs/` | Simulation, task, and training configurations. |
+| `scripts/` | Resource import, task scans, and installation verification. |
+| `examples/simulation/` | Programmatic pose-control examples. |
+| `tests/` | Simulation, GUI, task, and compatibility tests. |
+| `docs/` | Architecture and operating documentation in English. |
+| `reports/` | Saved simulation validation and task scans. |
+| `outputs/` | Included simulation exports, models, checkpoints, training logs, and evaluations. |
+| `src/vessel_phantom/` | Legacy forwarding interfaces without duplicate implementation or assets. |
+
+## Reinforcement learning
+
+```bash
+python scripts/tasks/scan_longitudinal_region.py
+python -m view_transition_rl.training.train_dqn --config configs/training/dqn_longitudinal.json --output outputs/training/new_run
+python -m view_transition_rl.evaluation.evaluate_policy --model outputs/training/dqn_longitudinal/best_model.zip --output outputs/evaluation/new_evaluation
+```
+
+The saved best and final models each reach the longitudinal-view criterion in 19 actions from the fixed initial pose. This is a deterministic single-phantom result, not a generalization benchmark. The self-contained project overview explains the task, reward, algorithm, and evidence.
+
+## Python use
+
+```python
+from view_transition_rl.simulation import PhantomEnv
+
+env = PhantomEnv()
+result = env.step([1, 0, 0, 0, 0])  # mm and rad; five local probe degrees of freedom
+assert result.accepted, result.reason
+mask = env.get_mask()              # uint8, 480×480, values 0/255
+env.export("outputs/simulation/example")
+```
+
+The displayed linear-probe shell is adapted to the contact footprint, cropped to 50 mm height, and capped. It affects GUI appearance only.
+
+## Testing and distribution
+
+```bash
+python -m unittest discover -s tests -v
+PHANTOM_TEST_GUI=1 python -m unittest discover -s tests/simulation -p test_gui_keyboard.py -v
+python -m view_transition_rl sim evaluate --output outputs/simulation/evaluation
+python -m pip wheel --no-deps --no-build-isolation --wheel-dir dist .
+python scripts/verification/verify_install.py dist/view_transition_rl-0.1.0-py3-none-any.whl --gui
+```
+
+GUI tests require PyVista and a working offscreen OpenGL backend. Ordinary geometry tests do not create windows. The saved 190-frame reference comparison reports mean Dice 0.9567 and IoU 0.9177.
+
+## Compatibility and sharing
+
+`python -m vessel_phantom gui`, `vessel-phantom gui`, and `from vessel_phantom import PhantomEnv` forward to the same implementation. New code should use `view_transition_rl`.
+
+Simulation configuration lives in `configs/simulation/default.json`; maintenance scripts are under `scripts/`. Historical screenshots and exports remain in `outputs/simulation/legacy/`. This shared copy excludes virtual environments, IDE settings, caches, and generated build artifacts.

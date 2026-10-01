@@ -1,0 +1,22 @@
+{
+  "phantom_id": "curved_arc",
+  "target_arc_length_mm": 30,
+  "yaw_step_deg": 0.25,
+  "yaw_poses_checked": 1440,
+  "all_yaw_poses_legal": true,
+  "yaw_only_complete_target": false,
+  "yaw_best_deg": -98.25,
+  "yaw_best_continuous_target_length_mm": 22.0,
+  "analytic_minimum_max_endpoint_plane_distance_mm": 3.794492405743083,
+  "vessel_radius_mm": 2.0,
+  "longitudinal_complete_target": true,
+  "longitudinal_pose": {
+    "x_mm": 0,
+    "y_mm": 0,
+    "roll_deg": 4.951919635368323,
+    "pitch_deg": 0,
+    "yaw_deg": 90
+  },
+  "interpretation": "Yaw-only cannot show the entire central 30 mm arc; Roll plus Yaw does so without changing X or Y. Local longitudinal views remain possible.",
+  "coverage_metric": "Intersection with each analytic lumen cross-section, not mask aspect ratio. Yaw failure for all angles also follows from the endpoint distance bound exceeding the radius."
+}

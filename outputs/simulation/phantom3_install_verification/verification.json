@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "source_access_blocked": [
+    "/home/wu/Documents/projects/my_projects/View_transition_RL",
+    "/home/wu/Documents/projects/my_projects/GPIS",
+    "/home/wu/Downloads/linear_transducer.STL"
+  ],
+  "runtime_dependencies_allowed": "/home/wu/Documents/projects/my_projects/View_transition_RL/.venv",
+  "new_and_legacy_entrypoints": true,
+  "single_packaged_asset_location": true,
+  "all_190_replay_frames": true,
+  "evaluation_frames": 190,
+  "dice_mean": 0.9566733255817634,
+  "gui_tested": false,
+  "all_three_phantoms_loaded": true,
+  "audited_file_operations": 777
+}

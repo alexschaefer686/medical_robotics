@@ -1,0 +1,18 @@
+{
+  "phantom": "reference",
+  "initial_pose": {"x_mm": 0.0, "y_mm": 0.0, "roll_deg": 0.0, "pitch_deg": 0.0, "yaw_deg": 0.0},
+  "roll_step_deg": 2.0,
+  "yaw_step_deg": 5.0,
+  "max_roll_deg": 20.0,
+  "success": {"min_column_run": 0.95, "min_thickness_mm": 4.5},
+  "reward": {
+    "column_run_weight": 0.7,
+    "thickness_weight": 0.3,
+    "potential_scale": 10.0,
+    "step_penalty": 0.05,
+    "rejected_penalty": 0.2,
+    "success_bonus": 10.0
+  },
+  "observation_size": 84,
+  "max_episode_steps": 60
+}

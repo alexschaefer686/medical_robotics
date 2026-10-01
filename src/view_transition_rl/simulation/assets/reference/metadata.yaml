@@ -1,0 +1,25 @@
+schema_version: 1
+state: complete
+start_time_utc: "2026-09-03T16:41:45Z"
+end_time_utc: "2026-09-03T16:42:13Z"
+transform_convention: world_T_image
+translation_unit: m
+quaternion_order: xyzw
+matrix_layout: row_major
+mask_encoding: mono8
+mask_topic: "/vessel_segmentation_node/vessel_mask"
+ultrasound_frame_topic: "/ultrasound_probe_reconstruction_node/ultrasound_frame"
+world_frame_id: "world"
+image_frame_id: "ultrasound_probe_image"
+image_physical_width_m: 0.040000000000000001
+image_physical_height_m: 0.040000000000000001
+pixel_axes: {columns: image_+X, rows: image_+Z, origin: top_edge_midpoint}
+probe_to_image_xyz: [0, 0, 0]
+probe_to_image_rpy: [0, 0, 0]
+probe_length_m: 0.252
+probe_y_offset_m: 0.0077499999999999999
+probe_z_rotation_deg: 7.5
+saved_pair_count: 190
+unmatched_mask_count: 1
+unmatched_pose_count: 391
+write_failure_count: 0

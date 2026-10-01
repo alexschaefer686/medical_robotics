@@ -1,0 +1,47 @@
+{
+  "frames": 190,
+  "pose_mode": "original acquisition poses; no contact projection",
+  "length_unit": "mm",
+  "image_shape": [
+    480,
+    480
+  ],
+  "fov_mm": [
+    40.0,
+    40.0
+  ],
+  "phantom_size_mm": [
+    70.0,
+    100.0,
+    40.0
+  ],
+  "notes": [
+    "STL smoothing and reconstruction change contours; masks are not expected to match exactly.",
+    "Both-empty Dice/IoU = 1; one-empty score = 0.",
+    "Unobserved vessel beyond closed reconstructed scan ends is not extrapolated.",
+    "Latency includes uncached mesh transform, stencil rasterization and phantom clipping; excludes PNG I/O."
+  ],
+  "dice": {
+    "mean": 0.9566733255817634,
+    "median": 0.9656060294948082,
+    "min": 0.9219382767769865,
+    "max": 0.9854183927091964,
+    "p95": 0.9812985390547021
+  },
+  "iou": {
+    "mean": 0.9177143515427552,
+    "median": 0.9334992859203635,
+    "min": 0.8551813471502591,
+    "max": 0.9712559203005063,
+    "p95": 0.9632837261241147
+  },
+  "slice_ms": {
+    "mean": 4.413274063010345,
+    "median": 4.407816000821185,
+    "min": 3.943275001802249,
+    "max": 5.282640002405969,
+    "p95": 4.814356498172855
+  },
+  "nonempty_reference_frames": 190,
+  "nonempty_reference_dice_mean": 0.9566733255817634
+}

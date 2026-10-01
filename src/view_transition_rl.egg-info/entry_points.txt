@@ -1,0 +1,3 @@
+[console_scripts]
+vessel-phantom = vessel_phantom.__main__:main
+view-transition-rl = view_transition_rl.__main__:main

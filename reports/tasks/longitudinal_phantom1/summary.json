@@ -1,0 +1,46 @@
+{
+  "phantom": "reference",
+  "fixed": {
+    "x_mm": 0,
+    "y_mm": 0,
+    "pitch_deg": 0
+  },
+  "grid_step_deg": {
+    "roll": 1.0,
+    "yaw": 2.0
+  },
+  "success": {
+    "min_column_run": 0.95,
+    "min_thickness_mm": 4.5
+  },
+  "success_region_yaw_pos": {
+    "roll_deg": [
+      -15.0,
+      -4.0
+    ],
+    "yaw_deg": [
+      86.0,
+      100.0
+    ],
+    "cells": 71
+  },
+  "success_region_yaw_neg": {
+    "roll_deg": [
+      4.0,
+      15.0
+    ],
+    "yaw_deg": [
+      -94.0,
+      -80.0
+    ],
+    "cells": 71
+  },
+  "best_pose_deg": {
+    "roll": -9.0,
+    "yaw": 94.0,
+    "thickness_mm": 6.080034722222222
+  },
+  "max_abs_roll_with_success_deg": 15.0,
+  "max_column_run_at_zero_roll": 0.47291666666666665,
+  "configured_max_roll_deg": 20.0
+}

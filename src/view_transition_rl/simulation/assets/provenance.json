@@ -1,0 +1,1171 @@
+{
+  "schema_version": 1,
+  "original_source_directory": "/home/wu/Documents/projects/my_projects/GPIS/icra27_data/data/scan_75mm/scan_baseline",
+  "note": "Source path is provenance only; runtime uses packaged resources exclusively.",
+  "files": [
+    {
+      "source_relative_path": "scan_baseline_smooth_mm.stl",
+      "bundled_path": "vessel_world_mm.stl",
+      "sha256": "049c34ec4e51c9120593d57733d7ad81e8b2c13c121d6e48ef6ded06ae4ec34d",
+      "bytes": 768084
+    },
+    {
+      "source_relative_path": "poses.csv",
+      "bundled_path": "reference/poses.csv",
+      "sha256": "bcf824afdcf7e9be21a082241efd73f6f7930ff454f8f1adaae314bf63f96645",
+      "bytes": 91185
+    },
+    {
+      "source_relative_path": "metadata.yaml",
+      "bundled_path": "reference/metadata.yaml",
+      "sha256": "aab884bc91ae8f9d7ac5bddda403680ea3e95b738da636694d23f19e211f9c7a",
+      "bytes": 842
+    },
+    {
+      "source_relative_path": "reconstruction_report.json",
+      "bundled_path": "source_reconstruction_report.json",
+      "sha256": "48f0e883ab71c5c4ca854235a94fe67c7dfbebf6e409a7c4949a9b99767c2776",
+      "bytes": 1235
+    },
+    {
+      "source_relative_path": "masks/mask_000000_1788453705_872601985.png",
+      "bundled_path": "reference/masks/mask_000000_1788453705_872601985.png",
+      "sha256": "1238e00cbc29ed7f7cc26083037231cf4a39426da8f2b2a7b20f349458ef16cf",
+      "bytes": 1383
+    },
+    {
+      "source_relative_path": "masks/mask_000001_1788453705_986357927.png",
+      "bundled_path": "reference/masks/mask_000001_1788453705_986357927.png",
+      "sha256": "8fc367f2f5a2ba0a5536afaeb098ba64b3c7c82ee72bc4c2c4f462bffafa7de3",
+      "bytes": 1383
+    },
+    {
+      "source_relative_path": "masks/mask_000002_1788453706_109503984.png",
+      "bundled_path": "reference/masks/mask_000002_1788453706_109503984.png",
+      "sha256": "6154503a8a852a7f4589fabb533a1679741bb3d187a719dda3e712cfdeee91f7",
+      "bytes": 1382
+    },
+    {
+      "source_relative_path": "masks/mask_000003_1788453706_264206886.png",
+      "bundled_path": "reference/masks/mask_000003_1788453706_264206886.png",
+      "sha256": "caec1b555e48f44fbe2aa4da51ea4194739f18982d0d47e657791659f5eef9ef",
+      "bytes": 1382
+    },
+    {
+      "source_relative_path": "masks/mask_000004_1788453706_421308994.png",
+      "bundled_path": "reference/masks/mask_000004_1788453706_421308994.png",
+      "sha256": "83a2a7dac5de14e6d075a1ec5fdff0f27e8afe5df9ca62fa97728e42d6e3bf02",
+      "bytes": 1382
+    },
+    {
+      "source_relative_path": "masks/mask_000005_1788453706_583889961.png",
+      "bundled_path": "reference/masks/mask_000005_1788453706_583889961.png",
+      "sha256": "b94569209f4bf77902be841b502affb405afe4162dd3baa100ad92a05a6ffb86",
+      "bytes": 1379
+    },
+    {
+      "source_relative_path": "masks/mask_000006_1788453706_698348999.png",
+      "bundled_path": "reference/masks/mask_000006_1788453706_698348999.png",
+      "sha256": "abf2a4736213a7ff2e636316a2db5edfb25a0fc9a01a676f4664d1a50cf39890",
+      "bytes": 1383
+    },
+    {
+      "source_relative_path": "masks/mask_000007_1788453706_821333885.png",
+      "bundled_path": "reference/masks/mask_000007_1788453706_821333885.png",
+      "sha256": "c4ed41e0aea7e8e65a291d1bdf86ec43bf26ad23395664ffc57c528f25538a05",
+      "bytes": 1381
+    },
+    {
+      "source_relative_path": "masks/mask_000008_1788453706_978358030.png",
+      "bundled_path": "reference/masks/mask_000008_1788453706_978358030.png",
+      "sha256": "991bf04f0a9b596862717590b172e959aa132a216ae446f74e9f3895505ed78a",
+      "bytes": 1378
+    },
+    {
+      "source_relative_path": "masks/mask_000009_1788453707_132136106.png",
+      "bundled_path": "reference/masks/mask_000009_1788453707_132136106.png",
+      "sha256": "b6a532aa86289793291f6f409c0aeada1a819f5b1508a2f082cecfee54fc5054",
+      "bytes": 1383
+    },
+    {
+      "source_relative_path": "masks/mask_000010_1788453707_256654977.png",
+      "bundled_path": "reference/masks/mask_000010_1788453707_256654977.png",
+      "sha256": "d1eb5842a4047168b4180b83550b162617b00e5f1436015dcdf13683f392bb5f",
+      "bytes": 1382
+    },
+    {
+      "source_relative_path": "masks/mask_000011_1788453707_410985946.png",
+      "bundled_path": "reference/masks/mask_000011_1788453707_410985946.png",
+      "sha256": "de22fd64040d62d15502f0e2d09142705f168e6a227e658050378df765d64aaf",
+      "bytes": 1383
+    },
+    {
+      "source_relative_path": "masks/mask_000012_1788453707_534749031.png",
+      "bundled_path": "reference/masks/mask_000012_1788453707_534749031.png",
+      "sha256": "c2dedaa5ca3878a883cfc46866099b3abd9b0c7475af22d0977116bad354e84b",
+      "bytes": 1382
+    },
+    {
+      "source_relative_path": "masks/mask_000013_1788453707_647264957.png",
+      "bundled_path": "reference/masks/mask_000013_1788453707_647264957.png",
+      "sha256": "0e1330b9461cf65bea9a019bde588a1b2ee610d669e7a680842fffaae1d1af6d",
+      "bytes": 1382
+    },
+    {
+      "source_relative_path": "masks/mask_000014_1788453707_770612001.png",
+      "bundled_path": "reference/masks/mask_000014_1788453707_770612001.png",
+      "sha256": "df83ac069b60d6ddb650757d8a7acec851e14ecf3d053e71c8273fca35452469",
+      "bytes": 1383
+    },
+    {
+      "source_relative_path": "masks/mask_000015_1788453707_925717115.png",
+      "bundled_path": "reference/masks/mask_000015_1788453707_925717115.png",
+      "sha256": "1065595dbfca2f584feaeaba9ab52724d5bf0725c6e37bcf9166581c39e9365d",
+      "bytes": 1384
+    },
+    {
+      "source_relative_path": "masks/mask_000016_1788453708_81633090.png",
+      "bundled_path": "reference/masks/mask_000016_1788453708_81633090.png",
+      "sha256": "260eed65ce2e94b6f2e54a991de92a13eae2f2e291cee70ef13951cd0ebde063",
+      "bytes": 1380
+    },
+    {
+      "source_relative_path": "masks/mask_000017_1788453708_205187082.png",
+      "bundled_path": "reference/masks/mask_000017_1788453708_205187082.png",
+      "sha256": "4f43ae2c7681690d2cbdcddea7a0709d03ffdb25d6ba8cdd235521572ca680ed",
+      "bytes": 1382
+    },
+    {
+      "source_relative_path": "masks/mask_000018_1788453708_319287061.png",
+      "bundled_path": "reference/masks/mask_000018_1788453708_319287061.png",
+      "sha256": "0875bd1222f5b5e32d07bef814602f573eece147d2b751d160ec581c2d1414f4",
+      "bytes": 1384
+    },
+    {
+      "source_relative_path": "masks/mask_000019_1788453708_444025993.png",
+      "bundled_path": "reference/masks/mask_000019_1788453708_444025993.png",
+      "sha256": "02f0d44cf8a5d0afd4d39b238f5ef59f7704becbba2a0391766a74f6a50a4191",
+      "bytes": 1384
+    },
+    {
+      "source_relative_path": "masks/mask_000020_1788453708_596600055.png",
+      "bundled_path": "reference/masks/mask_000020_1788453708_596600055.png",
+      "sha256": "b130bf66bdd7d3d016318329b5dd81d08ad31e965206d67fde249f2357c1d6ec",
+      "bytes": 1380
+    },
+    {
+      "source_relative_path": "masks/mask_000021_1788453708_721354007.png",
+      "bundled_path": "reference/masks/mask_000021_1788453708_721354007.png",
+      "sha256": "61122ec947a31e000b27fa6b3925772b57ce4183b1c212e824881c27fd9b0729",
+      "bytes": 1381
+    },
+    {
+      "source_relative_path": "masks/mask_000022_1788453708_874753952.png",
+      "bundled_path": "reference/masks/mask_000022_1788453708_874753952.png",
+      "sha256": "b62a21a8ebba9b10fbe179699695855c827dd02b64ebf0bc4f3444a6c93886b7",
+      "bytes": 1372
+    },
+    {
+      "source_relative_path": "masks/mask_000023_1788453709_31630992.png",
+      "bundled_path": "reference/masks/mask_000023_1788453709_31630992.png",
+      "sha256": "a375f8a18489c1eb93b4bd819b0b3d39aa5bfe4c2d95a06a98c41da07ed5db04",
+      "bytes": 1366
+    },
+    {
+      "source_relative_path": "masks/mask_000024_1788453709_154226064.png",
+      "bundled_path": "reference/masks/mask_000024_1788453709_154226064.png",
+      "sha256": "de957b1ddff8935bc99c617fb48b0b12e71c451926694c10b2a42325be041b15",
+      "bytes": 1344
+    },
+    {
+      "source_relative_path": "masks/mask_000025_1788453709_268388986.png",
+      "bundled_path": "reference/masks/mask_000025_1788453709_268388986.png",
+      "sha256": "9fd1baf980ead1920914d01467e469488f3008107a300af2f5348dce29312b98",
+      "bytes": 1331
+    },
+    {
+      "source_relative_path": "masks/mask_000026_1788453709_392011880.png",
+      "bundled_path": "reference/masks/mask_000026_1788453709_392011880.png",
+      "sha256": "eb3e3b7bc35e7810805fc42fcc0bdf8f635d91bb3ec7245fd69192b83307c549",
+      "bytes": 1331
+    },
+    {
+      "source_relative_path": "masks/mask_000027_1788453709_504749059.png",
+      "bundled_path": "reference/masks/mask_000027_1788453709_504749059.png",
+      "sha256": "9f35bdcc0479daa8be5893ed108c752243eaaee9c605e8460e29c95741a2c47d",
+      "bytes": 1324
+    },
+    {
+      "source_relative_path": "masks/mask_000028_1788453709_668526887.png",
+      "bundled_path": "reference/masks/mask_000028_1788453709_668526887.png",
+      "sha256": "809077e0ff074aefabe631d3d574845857ac8639673eb2207556006decdf5cca",
+      "bytes": 1291
+    },
+    {
+      "source_relative_path": "masks/mask_000029_1788453709_784296035.png",
+      "bundled_path": "reference/masks/mask_000029_1788453709_784296035.png",
+      "sha256": "ff7ddbd903bb0b7dabbfdc973276504bd5749e7e968bde147c4f1fa48a5a78b2",
+      "bytes": 1268
+    },
+    {
+      "source_relative_path": "masks/mask_000030_1788453709_908286094.png",
+      "bundled_path": "reference/masks/mask_000030_1788453709_908286094.png",
+      "sha256": "e807dd9e6636578d55eeaca44b478ec41be654094b96500355b0e69d066f2de4",
+      "bytes": 1269
+    },
+    {
+      "source_relative_path": "masks/mask_000031_1788453710_62221050.png",
+      "bundled_path": "reference/masks/mask_000031_1788453710_62221050.png",
+      "sha256": "b0fc1d64fa5f47b65184232b891fffce58dc51a5920c5d6597d42d4dafe098a5",
+      "bytes": 1266
+    },
+    {
+      "source_relative_path": "masks/mask_000032_1788453710_217267990.png",
+      "bundled_path": "reference/masks/mask_000032_1788453710_217267990.png",
+      "sha256": "40bb9e906a716a54bfcc6c8897b6ea684be823ca051b86c6ad3be369256c0e97",
+      "bytes": 1255
+    },
+    {
+      "source_relative_path": "masks/mask_000033_1788453710_380178928.png",
+      "bundled_path": "reference/masks/mask_000033_1788453710_380178928.png",
+      "sha256": "7fd7a9baf2133d35f10f389543408f9696864fa45f23359407172f00b6dc6460",
+      "bytes": 1245
+    },
+    {
+      "source_relative_path": "masks/mask_000034_1788453710_536185979.png",
+      "bundled_path": "reference/masks/mask_000034_1788453710_536185979.png",
+      "sha256": "eba35d5d0ba8b49829d6027da349430ac1c6eba05584629b8f725b3c289914a8",
+      "bytes": 1243
+    },
+    {
+      "source_relative_path": "masks/mask_000035_1788453710_691437959.png",
+      "bundled_path": "reference/masks/mask_000035_1788453710_691437959.png",
+      "sha256": "f95853e3b20a773fcb9cdd4e37aafaba3ebd86bbe6ed883e95b76af3ea568702",
+      "bytes": 1221
+    },
+    {
+      "source_relative_path": "masks/mask_000036_1788453710_856190919.png",
+      "bundled_path": "reference/masks/mask_000036_1788453710_856190919.png",
+      "sha256": "8c811dcf643a1844dbb315f9616a4da1ca3594eabceabad2070adbf0b5b29f5d",
+      "bytes": 1228
+    },
+    {
+      "source_relative_path": "masks/mask_000037_1788453711_11883974.png",
+      "bundled_path": "reference/masks/mask_000037_1788453711_11883974.png",
+      "sha256": "2e994dbf421e545a63b0aded55395dcd354bbbef33579d392b240888b03a0904",
+      "bytes": 1241
+    },
+    {
+      "source_relative_path": "masks/mask_000038_1788453711_92845916.png",
+      "bundled_path": "reference/masks/mask_000038_1788453711_92845916.png",
+      "sha256": "7139066ca7b29442e8bc983d05367a3027fba2f2633a7987db25ea53a5ae5363",
+      "bytes": 1235
+    },
+    {
+      "source_relative_path": "masks/mask_000039_1788453711_289391994.png",
+      "bundled_path": "reference/masks/mask_000039_1788453711_289391994.png",
+      "sha256": "c7d822d4750ed7a031f4d6815fc1ec2164953bf1208b2db7f89a36395d69d5da",
+      "bytes": 1241
+    },
+    {
+      "source_relative_path": "masks/mask_000040_1788453711_403840065.png",
+      "bundled_path": "reference/masks/mask_000040_1788453711_403840065.png",
+      "sha256": "45404cd7dc96c07f04ffde7b4829ba436ec191bb1d6e090575c226b62145d52d",
+      "bytes": 1231
+    },
+    {
+      "source_relative_path": "masks/mask_000041_1788453711_568728923.png",
+      "bundled_path": "reference/masks/mask_000041_1788453711_568728923.png",
+      "sha256": "fd98db0fea79aedb1d5a48c653e4d24d7de9bd9dea0227432c2beec952d2354b",
+      "bytes": 1265
+    },
+    {
+      "source_relative_path": "masks/mask_000042_1788453711_682832956.png",
+      "bundled_path": "reference/masks/mask_000042_1788453711_682832956.png",
+      "sha256": "4dd4b6bcd0e8e0dfb43ed2ae6441f5df01236afd0fe31aa6d905589a0fa09195",
+      "bytes": 1242
+    },
+    {
+      "source_relative_path": "masks/mask_000043_1788453711_805389881.png",
+      "bundled_path": "reference/masks/mask_000043_1788453711_805389881.png",
+      "sha256": "447d7328e2ac0fb5d067cbab2d0f1e1c5f7722c9209fb46eea64eed390c0fbd2",
+      "bytes": 1248
+    },
+    {
+      "source_relative_path": "masks/mask_000044_1788453712_1176118.png",
+      "bundled_path": "reference/masks/mask_000044_1788453712_1176118.png",
+      "sha256": "07bb70dca9b850f47d4303bc515dd47954621fd78526ac93bc8c2f7897a442e7",
+      "bytes": 1272
+    },
+    {
+      "source_relative_path": "masks/mask_000045_1788453712_156987905.png",
+      "bundled_path": "reference/masks/mask_000045_1788453712_156987905.png",
+      "sha256": "c488d4b723012eb3716ffc4b18fe4f35c0d8e4d06421076702e56e05cd9a08ff",
+      "bytes": 1272
+    },
+    {
+      "source_relative_path": "masks/mask_000046_1788453712_279126882.png",
+      "bundled_path": "reference/masks/mask_000046_1788453712_279126882.png",
+      "sha256": "da661c8b2e645edf916c3e1de879ebb4271c9b1ddf792017b28ff738b05257d0",
+      "bytes": 1285
+    },
+    {
+      "source_relative_path": "masks/mask_000047_1788453712_435720920.png",
+      "bundled_path": "reference/masks/mask_000047_1788453712_435720920.png",
+      "sha256": "633800a7808f23c2009bd935b8c291068ebbaa5a5aff6be9a05ef473b42384cb",
+      "bytes": 1293
+    },
+    {
+      "source_relative_path": "masks/mask_000048_1788453712_590745925.png",
+      "bundled_path": "reference/masks/mask_000048_1788453712_590745925.png",
+      "sha256": "6657ad996c186bb20d08832b52c35f3cbaca06fb9667d9f0e516728ae5a0aa3a",
+      "bytes": 1290
+    },
+    {
+      "source_relative_path": "masks/mask_000049_1788453712_755850076.png",
+      "bundled_path": "reference/masks/mask_000049_1788453712_755850076.png",
+      "sha256": "167596ca81e06e3c2346689a8b4a709139ac4fa4e954fd73aca7d143413436f0",
+      "bytes": 1292
+    },
+    {
+      "source_relative_path": "masks/mask_000050_1788453712_869646072.png",
+      "bundled_path": "reference/masks/mask_000050_1788453712_869646072.png",
+      "sha256": "11e0af6b7a378a5e6edd08d5f4fd1b85d0bb07d4904ceb29d71e6ebb99ec69a2",
+      "bytes": 1295
+    },
+    {
+      "source_relative_path": "masks/mask_000051_1788453712_991871118.png",
+      "bundled_path": "reference/masks/mask_000051_1788453712_991871118.png",
+      "sha256": "726710d9d0d12443f7a5e440b6019e99f97e48959184ef718c7fbf2d06ca1c61",
+      "bytes": 1302
+    },
+    {
+      "source_relative_path": "masks/mask_000052_1788453713_148478984.png",
+      "bundled_path": "reference/masks/mask_000052_1788453713_148478984.png",
+      "sha256": "647721201b35754f9700f21275aad16fe5dda5180a7f7c9ad0200d7a961c4230",
+      "bytes": 1292
+    },
+    {
+      "source_relative_path": "masks/mask_000053_1788453713_303268909.png",
+      "bundled_path": "reference/masks/mask_000053_1788453713_303268909.png",
+      "sha256": "7e2afd81ef4427c3268bae1e4fcd953526413ce14bb1d1cc7fe8be91013b727d",
+      "bytes": 1314
+    },
+    {
+      "source_relative_path": "masks/mask_000054_1788453713_425872087.png",
+      "bundled_path": "reference/masks/mask_000054_1788453713_425872087.png",
+      "sha256": "e7642ccabce7f6398d84818618d017e52e79e143248f470b71513f9867cb43e6",
+      "bytes": 1326
+    },
+    {
+      "source_relative_path": "masks/mask_000055_1788453713_580432891.png",
+      "bundled_path": "reference/masks/mask_000055_1788453713_580432891.png",
+      "sha256": "8ec7b98773336cc25d79c352d8339f2951e1eceac8eaf8cf8709d519664066d7",
+      "bytes": 1325
+    },
+    {
+      "source_relative_path": "masks/mask_000056_1788453713_703268051.png",
+      "bundled_path": "reference/masks/mask_000056_1788453713_703268051.png",
+      "sha256": "ad9450565d2691a59334b90ecc7fa6a5e2787228f469f9a47f6940b78de7e90b",
+      "bytes": 1312
+    },
+    {
+      "source_relative_path": "masks/mask_000057_1788453713_901882886.png",
+      "bundled_path": "reference/masks/mask_000057_1788453713_901882886.png",
+      "sha256": "26baa568fb7b48b1bffe0d1a5f2400b8537c1a849e2e1b54623095b075d7d6b5",
+      "bytes": 1326
+    },
+    {
+      "source_relative_path": "masks/mask_000058_1788453714_55519104.png",
+      "bundled_path": "reference/masks/mask_000058_1788453714_55519104.png",
+      "sha256": "72561bf4a3509aad02870dad4f6cd1629aff5d2ae32d32fe8a29dc7e791d6756",
+      "bytes": 1345
+    },
+    {
+      "source_relative_path": "masks/mask_000059_1788453714_177623987.png",
+      "bundled_path": "reference/masks/mask_000059_1788453714_177623987.png",
+      "sha256": "5b69d51c9dfa98ce22dba3a2424a54b9608bc28629beea40ef240c16668ed01b",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000060_1788453714_375116109.png",
+      "bundled_path": "reference/masks/mask_000060_1788453714_375116109.png",
+      "sha256": "cc92f3375586ae1b24fb114cec85fe828e9ed3eba134397c3db63a06df1f6f5e",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000061_1788453714_530101060.png",
+      "bundled_path": "reference/masks/mask_000061_1788453714_530101060.png",
+      "sha256": "d51997a709d3528a69e6fbf06f9f909c4752e083f272a662d4b12601f80e006b",
+      "bytes": 1354
+    },
+    {
+      "source_relative_path": "masks/mask_000062_1788453714_652973890.png",
+      "bundled_path": "reference/masks/mask_000062_1788453714_652973890.png",
+      "sha256": "db2ab3c4fd0e713f8928b06020728bcbd0d73a43867ae53757645f42370e5dde",
+      "bytes": 1358
+    },
+    {
+      "source_relative_path": "masks/mask_000063_1788453714_809741973.png",
+      "bundled_path": "reference/masks/mask_000063_1788453714_809741973.png",
+      "sha256": "9386d8249a1079766179e7f2a0dfb9149467ad04af6039d36a6ce2323bc9262a",
+      "bytes": 1346
+    },
+    {
+      "source_relative_path": "masks/mask_000064_1788453714_964127063.png",
+      "bundled_path": "reference/masks/mask_000064_1788453714_964127063.png",
+      "sha256": "b5b0850ac3a943d659caf9efa669fcd571e71f1732f4748c8c8f0f479b2db9db",
+      "bytes": 1350
+    },
+    {
+      "source_relative_path": "masks/mask_000065_1788453715_128511905.png",
+      "bundled_path": "reference/masks/mask_000065_1788453715_128511905.png",
+      "sha256": "c8f84050d9cd41ccb9037efe07590a7da2102e4458acfa4f14ccd665de0071ce",
+      "bytes": 1352
+    },
+    {
+      "source_relative_path": "masks/mask_000066_1788453715_287214994.png",
+      "bundled_path": "reference/masks/mask_000066_1788453715_287214994.png",
+      "sha256": "66f9e46d63641784a4165eace8fdbf3f1837df07c4bf79f4faaffef728e0aa63",
+      "bytes": 1350
+    },
+    {
+      "source_relative_path": "masks/mask_000067_1788453715_439641952.png",
+      "bundled_path": "reference/masks/mask_000067_1788453715_439641952.png",
+      "sha256": "2708bb64ccf5fcf7ebe8adacd82fd3c090e6b632fa4520017120ba59351bdd4c",
+      "bytes": 1362
+    },
+    {
+      "source_relative_path": "masks/mask_000068_1788453715_602480888.png",
+      "bundled_path": "reference/masks/mask_000068_1788453715_602480888.png",
+      "sha256": "44539cc15cf2a9a5ead6ec267f3882a118c8fb8b300203348e11ee951b47db8b",
+      "bytes": 1361
+    },
+    {
+      "source_relative_path": "masks/mask_000069_1788453715_758275985.png",
+      "bundled_path": "reference/masks/mask_000069_1788453715_758275985.png",
+      "sha256": "76b2fdb50377d0805e7b39c9e6153bbf881221912a4c6589bdef9b6455ade711",
+      "bytes": 1363
+    },
+    {
+      "source_relative_path": "masks/mask_000070_1788453715_914295911.png",
+      "bundled_path": "reference/masks/mask_000070_1788453715_914295911.png",
+      "sha256": "a0df3a794c7de1d72dcb2bd1c193277bc3cbccc9779a2dcee96827ba449814e9",
+      "bytes": 1365
+    },
+    {
+      "source_relative_path": "masks/mask_000071_1788453716_38237094.png",
+      "bundled_path": "reference/masks/mask_000071_1788453716_38237094.png",
+      "sha256": "70dcce695cc3670152e98cd61f566ee6ce1e23e0a7caaf7d6ee3a2115110c802",
+      "bytes": 1352
+    },
+    {
+      "source_relative_path": "masks/mask_000072_1788453716_192218065.png",
+      "bundled_path": "reference/masks/mask_000072_1788453716_192218065.png",
+      "sha256": "d11508a4442c62787806e34b15f3d0f82e1cd1cd9003a6a0a38fa87c85da6236",
+      "bytes": 1371
+    },
+    {
+      "source_relative_path": "masks/mask_000073_1788453716_314578056.png",
+      "bundled_path": "reference/masks/mask_000073_1788453716_314578056.png",
+      "sha256": "c9a83ae5f33f42763a7dcbbcd6a563cd75a5f8c94b6fd15f7a619470f8771cd2",
+      "bytes": 1372
+    },
+    {
+      "source_relative_path": "masks/mask_000074_1788453716_514314889.png",
+      "bundled_path": "reference/masks/mask_000074_1788453716_514314889.png",
+      "sha256": "6af4de46c81943b0e40ea6beace2a7f80525f839f1f81ae8730b62ec0de153fe",
+      "bytes": 1356
+    },
+    {
+      "source_relative_path": "masks/mask_000075_1788453716_667109012.png",
+      "bundled_path": "reference/masks/mask_000075_1788453716_667109012.png",
+      "sha256": "8db6a1d36f4b6df9d5b9cd707c3ca2427015c0a3e4cd9b0ff4cf302b4e71cceb",
+      "bytes": 1363
+    },
+    {
+      "source_relative_path": "masks/mask_000076_1788453716_789705991.png",
+      "bundled_path": "reference/masks/mask_000076_1788453716_789705991.png",
+      "sha256": "7d16978a014cde04ad610396596cba53d897690c0c1e93d1451e72b59d26bd52",
+      "bytes": 1364
+    },
+    {
+      "source_relative_path": "masks/mask_000077_1788453716_986294984.png",
+      "bundled_path": "reference/masks/mask_000077_1788453716_986294984.png",
+      "sha256": "c0d8f6e36bc3fb098b9cb0b5c38bc83b766a723b9774eb68f3ae77bb7667675e",
+      "bytes": 1360
+    },
+    {
+      "source_relative_path": "masks/mask_000078_1788453717_100624084.png",
+      "bundled_path": "reference/masks/mask_000078_1788453717_100624084.png",
+      "sha256": "a1ce6c705be2a64080c6fd971971861faf1c19206c1461a586040d4cfae92c0c",
+      "bytes": 1362
+    },
+    {
+      "source_relative_path": "masks/mask_000079_1788453717_267028093.png",
+      "bundled_path": "reference/masks/mask_000079_1788453717_267028093.png",
+      "sha256": "9184e228363a334fc82a99e1c65bfa97068ab33bd4c3a1a35ea57e3d8e397b7e",
+      "bytes": 1375
+    },
+    {
+      "source_relative_path": "masks/mask_000080_1788453717_420351028.png",
+      "bundled_path": "reference/masks/mask_000080_1788453717_420351028.png",
+      "sha256": "e59e34a99a36c24b0cdfac38bda860b06493fdcc2763c6f67ffc0e7307ac5c15",
+      "bytes": 1376
+    },
+    {
+      "source_relative_path": "masks/mask_000081_1788453717_502310991.png",
+      "bundled_path": "reference/masks/mask_000081_1788453717_502310991.png",
+      "sha256": "d9cc32d7de177ed2bd599a3796d7037980e8d60dc78078443a847c4d736fabf7",
+      "bytes": 1373
+    },
+    {
+      "source_relative_path": "masks/mask_000082_1788453717_697784900.png",
+      "bundled_path": "reference/masks/mask_000082_1788453717_697784900.png",
+      "sha256": "574889e0b3d023b49815cc6f24bb0a0081a62080671f2b3d4974ef97cc451efa",
+      "bytes": 1379
+    },
+    {
+      "source_relative_path": "masks/mask_000083_1788453717_813417911.png",
+      "bundled_path": "reference/masks/mask_000083_1788453717_813417911.png",
+      "sha256": "81aeb7cbd7cc8f777ab3fccd5327c6e7eb39e1bfdda49772c855df2f56797f2b",
+      "bytes": 1376
+    },
+    {
+      "source_relative_path": "masks/mask_000084_1788453717_977159023.png",
+      "bundled_path": "reference/masks/mask_000084_1788453717_977159023.png",
+      "sha256": "4cba6de7f0ee9da03845ebc2dbea5aed2fb644bed0456e72e796a0ebd52ebbd3",
+      "bytes": 1389
+    },
+    {
+      "source_relative_path": "masks/mask_000085_1788453718_133641004.png",
+      "bundled_path": "reference/masks/mask_000085_1788453718_133641004.png",
+      "sha256": "b94775c65ea7f5108ae45e00f24330c1ccdbe95bb1c513a5368715f53d3ac377",
+      "bytes": 1394
+    },
+    {
+      "source_relative_path": "masks/mask_000086_1788453718_288599014.png",
+      "bundled_path": "reference/masks/mask_000086_1788453718_288599014.png",
+      "sha256": "cd32799e3e13f7c58555a6f18925abca133fbeb3306fcaed1398fb40f01c2007",
+      "bytes": 1383
+    },
+    {
+      "source_relative_path": "masks/mask_000087_1788453718_409328937.png",
+      "bundled_path": "reference/masks/mask_000087_1788453718_409328937.png",
+      "sha256": "420ac6d37a68a8b6b33a835a1e08ad36fbb6a3d7814ca60545cbf92ba240e863",
+      "bytes": 1381
+    },
+    {
+      "source_relative_path": "masks/mask_000088_1788453718_564879894.png",
+      "bundled_path": "reference/masks/mask_000088_1788453718_564879894.png",
+      "sha256": "0d2bb39921a46fef10676d43d2beb12b61cc0c914e9229dd169e77037922ba08",
+      "bytes": 1381
+    },
+    {
+      "source_relative_path": "masks/mask_000089_1788453718_688415050.png",
+      "bundled_path": "reference/masks/mask_000089_1788453718_688415050.png",
+      "sha256": "1c9a8cd8ac7c65cd6b23b8346e9a93bf5f992cae7a8696693a27bd0f6b0f6a59",
+      "bytes": 1380
+    },
+    {
+      "source_relative_path": "masks/mask_000090_1788453718_883949041.png",
+      "bundled_path": "reference/masks/mask_000090_1788453718_883949041.png",
+      "sha256": "4643b312f9bd6af9c14c849ab5943bbe1355c6ec55bc71ae528cfa87be585a76",
+      "bytes": 1376
+    },
+    {
+      "source_relative_path": "masks/mask_000091_1788453719_242948.png",
+      "bundled_path": "reference/masks/mask_000091_1788453719_242948.png",
+      "sha256": "3acae8df70749260f1e01112200172a87a109dab5fc136f735858f24f607d883",
+      "bytes": 1385
+    },
+    {
+      "source_relative_path": "masks/mask_000092_1788453719_124383926.png",
+      "bundled_path": "reference/masks/mask_000092_1788453719_124383926.png",
+      "sha256": "d6bfd408a71b43b3b8504e74d08515e7e8c67c441671e1adda9ee8a44be3dac6",
+      "bytes": 1375
+    },
+    {
+      "source_relative_path": "masks/mask_000093_1788453719_278410911.png",
+      "bundled_path": "reference/masks/mask_000093_1788453719_278410911.png",
+      "sha256": "a3cb8a2505a99e76c17a73f926f60e875e9de83f7eefc91fd2ef6112ed3fe27a",
+      "bytes": 1376
+    },
+    {
+      "source_relative_path": "masks/mask_000094_1788453719_400479078.png",
+      "bundled_path": "reference/masks/mask_000094_1788453719_400479078.png",
+      "sha256": "3c2aaa221bd9f07d1fc1b60d3dacd32103604ba8b2c26457c58a23de02054c0a",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000095_1788453719_596663951.png",
+      "bundled_path": "reference/masks/mask_000095_1788453719_596663951.png",
+      "sha256": "bdab03f279eaae44d46ef78f6744c43a90f0bca282506291afc4edbc4cb91742",
+      "bytes": 1361
+    },
+    {
+      "source_relative_path": "masks/mask_000096_1788453719_711397886.png",
+      "bundled_path": "reference/masks/mask_000096_1788453719_711397886.png",
+      "sha256": "7b49ba08d0a4e88e559363b66705f0b72860033e5cb79cba38aea8a0f33c5ea6",
+      "bytes": 1364
+    },
+    {
+      "source_relative_path": "masks/mask_000097_1788453719_834043025.png",
+      "bundled_path": "reference/masks/mask_000097_1788453719_834043025.png",
+      "sha256": "723419f88646a3584c73bdc1618901a72f10de820b5f59749d0263b9db306148",
+      "bytes": 1355
+    },
+    {
+      "source_relative_path": "masks/mask_000098_1788453719_990175008.png",
+      "bundled_path": "reference/masks/mask_000098_1788453719_990175008.png",
+      "sha256": "78f17ddea5eddbb27df2510360fbd92c616dde616e20760fbc4949e6f5c8e5fe",
+      "bytes": 1368
+    },
+    {
+      "source_relative_path": "masks/mask_000099_1788453720_113646030.png",
+      "bundled_path": "reference/masks/mask_000099_1788453720_113646030.png",
+      "sha256": "38fb1cfe813f4db2ccadd89518eaeddfed2eed7aed49c88dde3c862ad5c8aaa0",
+      "bytes": 1355
+    },
+    {
+      "source_relative_path": "masks/mask_000100_1788453720_310458898.png",
+      "bundled_path": "reference/masks/mask_000100_1788453720_310458898.png",
+      "sha256": "7ec6bdf9cadb14d32024ae20c331490fc76b3c096e85a08d20b068017e003a3e",
+      "bytes": 1375
+    },
+    {
+      "source_relative_path": "masks/mask_000101_1788453720_423763990.png",
+      "bundled_path": "reference/masks/mask_000101_1788453720_423763990.png",
+      "sha256": "e7daa5df8c05c3b41240b2299bfd2c982aef36b9012437c8de99d405cb80e73d",
+      "bytes": 1367
+    },
+    {
+      "source_relative_path": "masks/mask_000102_1788453720_587028980.png",
+      "bundled_path": "reference/masks/mask_000102_1788453720_587028980.png",
+      "sha256": "cab862abb42e8cb9b77459196947befb226d8b255220636bc65ca7ae2659fc33",
+      "bytes": 1370
+    },
+    {
+      "source_relative_path": "masks/mask_000103_1788453720_701436996.png",
+      "bundled_path": "reference/masks/mask_000103_1788453720_701436996.png",
+      "sha256": "4ebcd56653901d9269fe2fe5eb84f53971743c076951bc7aa5b78a1cdfdc29f8",
+      "bytes": 1381
+    },
+    {
+      "source_relative_path": "masks/mask_000104_1788453720_824971914.png",
+      "bundled_path": "reference/masks/mask_000104_1788453720_824971914.png",
+      "sha256": "671cf64ebc0d9242cbf0b5a554246dd43d8524ac91fd53639d7f62338846e582",
+      "bytes": 1367
+    },
+    {
+      "source_relative_path": "masks/mask_000105_1788453721_22311925.png",
+      "bundled_path": "reference/masks/mask_000105_1788453721_22311925.png",
+      "sha256": "1b723523c8fb8e5ca9c5616038980ef5112394bd265d64a6014c0a7b49113183",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000106_1788453721_176358938.png",
+      "bundled_path": "reference/masks/mask_000106_1788453721_176358938.png",
+      "sha256": "44c9bb308025cf18b68eda17d7a42d063129cf7a6d17c3eda3aa86fbaa28d3ab",
+      "bytes": 1360
+    },
+    {
+      "source_relative_path": "masks/mask_000107_1788453721_299681901.png",
+      "bundled_path": "reference/masks/mask_000107_1788453721_299681901.png",
+      "sha256": "5c8fefcedd450db40fc3b40a7b46c5e43df2776b9a59a3b2ba492a5469464575",
+      "bytes": 1376
+    },
+    {
+      "source_relative_path": "masks/mask_000108_1788453721_454459905.png",
+      "bundled_path": "reference/masks/mask_000108_1788453721_454459905.png",
+      "sha256": "38eb5a48f77d3cd6c1e2199bc3b9bd77e625bee8f4eb684e34f8383af51bb56e",
+      "bytes": 1368
+    },
+    {
+      "source_relative_path": "masks/mask_000109_1788453721_609945058.png",
+      "bundled_path": "reference/masks/mask_000109_1788453721_609945058.png",
+      "sha256": "eec027d36503c76e7c7fac9d682da7bae37e7ebb905688f3a92ed2144aeb5c48",
+      "bytes": 1375
+    },
+    {
+      "source_relative_path": "masks/mask_000110_1788453721_775028944.png",
+      "bundled_path": "reference/masks/mask_000110_1788453721_775028944.png",
+      "sha256": "60c42c908bb151449ba20b7cf41304d0581effae4b5940ee0219fb9b50d823c5",
+      "bytes": 1356
+    },
+    {
+      "source_relative_path": "masks/mask_000111_1788453721_888094902.png",
+      "bundled_path": "reference/masks/mask_000111_1788453721_888094902.png",
+      "sha256": "1a9525837519b98c0e06c31aa2ee6f18647430476e63b4177634bb5486e5c131",
+      "bytes": 1360
+    },
+    {
+      "source_relative_path": "masks/mask_000112_1788453722_11708974.png",
+      "bundled_path": "reference/masks/mask_000112_1788453722_11708974.png",
+      "sha256": "713d739cfbe3e720dbfe1f0a85364cf3b0d62b482238bc92e8ce9de2fa0a2862",
+      "bytes": 1339
+    },
+    {
+      "source_relative_path": "masks/mask_000113_1788453722_208636045.png",
+      "bundled_path": "reference/masks/mask_000113_1788453722_208636045.png",
+      "sha256": "59dfb4efff26de6074e62e185727f25d122c11034dbd772e45f0db53ea0e8108",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000114_1788453722_362915039.png",
+      "bundled_path": "reference/masks/mask_000114_1788453722_362915039.png",
+      "sha256": "c68f2ab2349044892d3bbd7b29950f4f038d73241c1559764b9c9a2751f06afb",
+      "bytes": 1344
+    },
+    {
+      "source_relative_path": "masks/mask_000115_1788453722_488075971.png",
+      "bundled_path": "reference/masks/mask_000115_1788453722_488075971.png",
+      "sha256": "134a567cc3dd9f03e246e03bfe0c7e00625147a671776c80b943581384db21ae",
+      "bytes": 1358
+    },
+    {
+      "source_relative_path": "masks/mask_000116_1788453722_642966032.png",
+      "bundled_path": "reference/masks/mask_000116_1788453722_642966032.png",
+      "sha256": "959a25057793801e040f2ee17b03bff3a00f1625738f8f3f6ca1cc2a6967ae5a",
+      "bytes": 1359
+    },
+    {
+      "source_relative_path": "masks/mask_000117_1788453722_795964956.png",
+      "bundled_path": "reference/masks/mask_000117_1788453722_795964956.png",
+      "sha256": "76c1f20cbeb7396e426b24a80add7a5e89f99d0dabf4122dabaa517d84c938de",
+      "bytes": 1352
+    },
+    {
+      "source_relative_path": "masks/mask_000118_1788453722_962256908.png",
+      "bundled_path": "reference/masks/mask_000118_1788453722_962256908.png",
+      "sha256": "5dcdb4a0b130b8cba5b9c155efc743562b17c648afaf5922ff0a44735f840840",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000119_1788453723_115494012.png",
+      "bundled_path": "reference/masks/mask_000119_1788453723_115494012.png",
+      "sha256": "509ac5fd1827566a9454fe7b90e5875d2a659dd8ff004cf4404bfb497f573a98",
+      "bytes": 1358
+    },
+    {
+      "source_relative_path": "masks/mask_000120_1788453723_270998001.png",
+      "bundled_path": "reference/masks/mask_000120_1788453723_270998001.png",
+      "sha256": "fa17ab91a2046534e9715c06c655e3985d65e84c13e62d26f8a950663b91c9c5",
+      "bytes": 1353
+    },
+    {
+      "source_relative_path": "masks/mask_000121_1788453723_394042968.png",
+      "bundled_path": "reference/masks/mask_000121_1788453723_394042968.png",
+      "sha256": "608715f650475047ea9ef12ce15dcd9a941bdb0a4421763d4c531cd4300bca66",
+      "bytes": 1350
+    },
+    {
+      "source_relative_path": "masks/mask_000122_1788453723_551731109.png",
+      "bundled_path": "reference/masks/mask_000122_1788453723_551731109.png",
+      "sha256": "dd43aba3909a27fb817e2b8e1733200ff201e66603904afd26b2fe2bfc813ba7",
+      "bytes": 1353
+    },
+    {
+      "source_relative_path": "masks/mask_000123_1788453723_672499895.png",
+      "bundled_path": "reference/masks/mask_000123_1788453723_672499895.png",
+      "sha256": "0a2fbda059ee9ca49fd938d843438ebbf3e9cf97e55c7eda7d094690f9578629",
+      "bytes": 1351
+    },
+    {
+      "source_relative_path": "masks/mask_000124_1788453723_868616104.png",
+      "bundled_path": "reference/masks/mask_000124_1788453723_868616104.png",
+      "sha256": "49bb0e3538ab18eef19dc5b671c9d031fd7dce3001c9d0586cfeec3832620468",
+      "bytes": 1353
+    },
+    {
+      "source_relative_path": "masks/mask_000125_1788453723_985697031.png",
+      "bundled_path": "reference/masks/mask_000125_1788453723_985697031.png",
+      "sha256": "281fab864fe3c97bcca5b32913fc08eebc71c34f188a7c45a3cf67aef6b22fd2",
+      "bytes": 1350
+    },
+    {
+      "source_relative_path": "masks/mask_000126_1788453724_106112003.png",
+      "bundled_path": "reference/masks/mask_000126_1788453724_106112003.png",
+      "sha256": "7d3898e4b0edd05f496cb214399d2f84c007a9cfe40a4f4a7b6d8fa7eb0fda0d",
+      "bytes": 1359
+    },
+    {
+      "source_relative_path": "masks/mask_000127_1788453724_261581897.png",
+      "bundled_path": "reference/masks/mask_000127_1788453724_261581897.png",
+      "sha256": "f6f59f3166129162e0010acdc2a4a743e2fee3e4a7caf7a8d16a27c0e5316ce1",
+      "bytes": 1360
+    },
+    {
+      "source_relative_path": "masks/mask_000128_1788453724_384278059.png",
+      "bundled_path": "reference/masks/mask_000128_1788453724_384278059.png",
+      "sha256": "8f7aa710adcdb3b7465865a1719e33703681885e3199167c17af6061b94c3e45",
+      "bytes": 1358
+    },
+    {
+      "source_relative_path": "masks/mask_000129_1788453724_540788888.png",
+      "bundled_path": "reference/masks/mask_000129_1788453724_540788888.png",
+      "sha256": "6661098226da5e0c108b7d72c6bdaf0d5e77fb2fe6f1d9a2fc06dbc59d8104cf",
+      "bytes": 1351
+    },
+    {
+      "source_relative_path": "masks/mask_000130_1788453724_622514963.png",
+      "bundled_path": "reference/masks/mask_000130_1788453724_622514963.png",
+      "sha256": "715f09bb7557ce150244c2ed305cdc99cf91cb9e5dfd33dbd91ebef8dbfa7924",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000131_1788453724_776994943.png",
+      "bundled_path": "reference/masks/mask_000131_1788453724_776994943.png",
+      "sha256": "daffd691f2163b2a7ecf38e30b1a93bc1531d014e59441233ba28a5af82b513f",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000132_1788453724_858867883.png",
+      "bundled_path": "reference/masks/mask_000132_1788453724_858867883.png",
+      "sha256": "1bfda0792c66bc302d39e1eda54d6548a25f83fecc892f4a9a5c57c41823aeeb",
+      "bytes": 1344
+    },
+    {
+      "source_relative_path": "masks/mask_000133_1788453725_55447101.png",
+      "bundled_path": "reference/masks/mask_000133_1788453725_55447101.png",
+      "sha256": "78fe68034891014f79060c076d3838a2d4f5c4594186606c8064bdded760f516",
+      "bytes": 1337
+    },
+    {
+      "source_relative_path": "masks/mask_000134_1788453725_211632966.png",
+      "bundled_path": "reference/masks/mask_000134_1788453725_211632966.png",
+      "sha256": "8dc5bdcf7f519a444dd0a7921ed99b4c3a3f0ed0048cbd0abf86e51de102e239",
+      "bytes": 1337
+    },
+    {
+      "source_relative_path": "masks/mask_000135_1788453725_333884954.png",
+      "bundled_path": "reference/masks/mask_000135_1788453725_333884954.png",
+      "sha256": "bbf1acb736d87215974b6ab65a52fdb2c0f058d41e1f4358bcc7f9aa45ac68f0",
+      "bytes": 1338
+    },
+    {
+      "source_relative_path": "masks/mask_000136_1788453725_494663953.png",
+      "bundled_path": "reference/masks/mask_000136_1788453725_494663953.png",
+      "sha256": "f469ac033dfd4f698edb6cfab7623ab35d204019ecaa6ecdd1ce153b4eaa2c9c",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000137_1788453725_644968986.png",
+      "bundled_path": "reference/masks/mask_000137_1788453725_644968986.png",
+      "sha256": "ccbccf61cb73a364585baa78fb4fe4d2fd624e1545009d67dcb0899104ffad7e",
+      "bytes": 1341
+    },
+    {
+      "source_relative_path": "masks/mask_000138_1788453725_810801029.png",
+      "bundled_path": "reference/masks/mask_000138_1788453725_810801029.png",
+      "sha256": "49f76548406909e45e7a32d62f8009780a774cce34273be53bfba49d604788b6",
+      "bytes": 1352
+    },
+    {
+      "source_relative_path": "masks/mask_000139_1788453725_923338890.png",
+      "bundled_path": "reference/masks/mask_000139_1788453725_923338890.png",
+      "sha256": "1e9a0743c12de8ff0124830224ef30e611ce608f0531f182d3e17d772f6f5232",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000140_1788453726_45249938.png",
+      "bundled_path": "reference/masks/mask_000140_1788453726_45249938.png",
+      "sha256": "4f3ca8bf32974f6805b11b369f6a0499b19376df38bf187f1d0cd1bbd0f14ba4",
+      "bytes": 1346
+    },
+    {
+      "source_relative_path": "masks/mask_000141_1788453726_201816082.png",
+      "bundled_path": "reference/masks/mask_000141_1788453726_201816082.png",
+      "sha256": "52fbd1a381cd22e0a1551de8fcb5fe263f365f3b130756d7eef98d6d2c79db33",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000142_1788453726_357718944.png",
+      "bundled_path": "reference/masks/mask_000142_1788453726_357718944.png",
+      "sha256": "50334882d96e54032c081c031679b76c1615e3500596a8877c48e828f4adaca9",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000143_1788453726_483114004.png",
+      "bundled_path": "reference/masks/mask_000143_1788453726_483114004.png",
+      "sha256": "fbdb87d0f3d5c56ffa41cb6fd66d7eaecec9c94531d2195ca57005cda2842acd",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000144_1788453726_636009931.png",
+      "bundled_path": "reference/masks/mask_000144_1788453726_636009931.png",
+      "sha256": "286024c427bd77a3ca95d9a4056d847acc1828d3d88c38152b5ed3b054980ae1",
+      "bytes": 1346
+    },
+    {
+      "source_relative_path": "masks/mask_000145_1788453726_757962942.png",
+      "bundled_path": "reference/masks/mask_000145_1788453726_757962942.png",
+      "sha256": "d10f2cd10526c298efb8eccf49b808fcf5f2b812de70e49fab0d375cdd78db84",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000146_1788453726_913343906.png",
+      "bundled_path": "reference/masks/mask_000146_1788453726_913343906.png",
+      "sha256": "e049f7c870b539b7ea7fa43b492ae734a0fd2e2266a321665fee4ec32e6d168f",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000147_1788453727_68993091.png",
+      "bundled_path": "reference/masks/mask_000147_1788453727_68993091.png",
+      "sha256": "4c21adcdfb450d7f3079d0059a2c40b4b94a1bcd3b846dd1f8767e8a786cae03",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000148_1788453727_234729051.png",
+      "bundled_path": "reference/masks/mask_000148_1788453727_234729051.png",
+      "sha256": "27299dac2ab93aa26e3835b365da1ad312a15d5c06084353b92e931eb4888017",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000149_1788453727_387981891.png",
+      "bundled_path": "reference/masks/mask_000149_1788453727_387981891.png",
+      "sha256": "f6198f8961803c0d624ce4857730272b9a601ee174328707618bda531b98e02f",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000150_1788453727_543745994.png",
+      "bundled_path": "reference/masks/mask_000150_1788453727_543745994.png",
+      "sha256": "a2bb0e31b4db104c010309771f5e0d4248b62a8cc341b1b2af2cb944d881a693",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000151_1788453727_666224002.png",
+      "bundled_path": "reference/masks/mask_000151_1788453727_666224002.png",
+      "sha256": "222a403a5594962c3bdb4089eca1d0e7fe10ff7205ccd955931c34c9c45a092e",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000152_1788453727_821954011.png",
+      "bundled_path": "reference/masks/mask_000152_1788453727_821954011.png",
+      "sha256": "c89ab5288662b21d1ec5811d8949c4b2ec474728bd5a80275c3281a8e388f6b1",
+      "bytes": 1346
+    },
+    {
+      "source_relative_path": "masks/mask_000153_1788453727_943978071.png",
+      "bundled_path": "reference/masks/mask_000153_1788453727_943978071.png",
+      "sha256": "041b176312da252773af64e33065e20349bb3347623e3b7dba1a9ae8203eb3aa",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000154_1788453728_99328994.png",
+      "bundled_path": "reference/masks/mask_000154_1788453728_99328994.png",
+      "sha256": "eb433a9258055f4d5ca6ea67ac4538ec7ffe254d3eff10918958393f67c5aef4",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000155_1788453728_255913972.png",
+      "bundled_path": "reference/masks/mask_000155_1788453728_255913972.png",
+      "sha256": "02d517c38fa5e55e3bae2cfaa4dc006d1547c72958f9d6003941f71d8576dcde",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000156_1788453728_381854057.png",
+      "bundled_path": "reference/masks/mask_000156_1788453728_381854057.png",
+      "sha256": "940c1ff6b370b85ae472a242d63a022448942de003198f06364d7353b3d909bd",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000157_1788453728_418502092.png",
+      "bundled_path": "reference/masks/mask_000157_1788453728_418502092.png",
+      "sha256": "feeaca30b57e4f628b6d7ab8dc43eb60675aafc5b08091e2d5d74048f5f346f7",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000158_1788453728_614877939.png",
+      "bundled_path": "reference/masks/mask_000158_1788453728_614877939.png",
+      "sha256": "239b7e5dd4392181f05f96749e5d571b9e9030afe42429e77a4a52201ddea4c6",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000159_1788453728_773961067.png",
+      "bundled_path": "reference/masks/mask_000159_1788453728_773961067.png",
+      "sha256": "3f5cff58c2003276fa16d5c397fe87187227ed34c492dae4fb757c7f94b61a71",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000160_1788453728_968218088.png",
+      "bundled_path": "reference/masks/mask_000160_1788453728_968218088.png",
+      "sha256": "1b0805f6ba36aa01e900dea13a5d88b5937df2daa11c879bbf4acd438e8dd68e",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000161_1788453729_134186029.png",
+      "bundled_path": "reference/masks/mask_000161_1788453729_134186029.png",
+      "sha256": "69c66961ec9efcdc9580fd1c487aeb5b7f32bb7f2edf83e2bb4cb8da2621460d",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000162_1788453729_328387022.png",
+      "bundled_path": "reference/masks/mask_000162_1788453729_328387022.png",
+      "sha256": "f9b3f037990af238944615f835c6beec13a06ecec33410885516024f1accf780",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000163_1788453729_483402013.png",
+      "bundled_path": "reference/masks/mask_000163_1788453729_483402013.png",
+      "sha256": "066f8eae53b0e62ef71b3282f9b5093b1efc1cbbcfcaa2c862d8115de1634b05",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000164_1788453729_606844902.png",
+      "bundled_path": "reference/masks/mask_000164_1788453729_606844902.png",
+      "sha256": "5557e580e708e706028ca3b8e3a7723380d4419652014a804c2a51e1d5eb0463",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000165_1788453729_804020881.png",
+      "bundled_path": "reference/masks/mask_000165_1788453729_804020881.png",
+      "sha256": "61d217e6ce5567b89e643ce7cb29024012f792938e1c2f94cf7bd23f18dce831",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000166_1788453729_918559074.png",
+      "bundled_path": "reference/masks/mask_000166_1788453729_918559074.png",
+      "sha256": "b5d8903bd6091c8170f461b80078751c6ebe96aad4226fc60e474825234a4316",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000167_1788453730_39710044.png",
+      "bundled_path": "reference/masks/mask_000167_1788453730_39710044.png",
+      "sha256": "d1e8fc78cd139b4afaa57b53ed8e2c24fae29bccaf985fd84ea9639ed3f91fb1",
+      "bytes": 1351
+    },
+    {
+      "source_relative_path": "masks/mask_000168_1788453730_196779966.png",
+      "bundled_path": "reference/masks/mask_000168_1788453730_196779966.png",
+      "sha256": "116e99aaec2fc1e610e5980077fde66be03bc0bd3c369ce0268476891234e8ba",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000169_1788453730_317020893.png",
+      "bundled_path": "reference/masks/mask_000169_1788453730_317020893.png",
+      "sha256": "7fc29fca14effe8005dbb77e6e1423f90e3855a3003bf2fdb33e2f523a79e122",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000170_1788453730_473886966.png",
+      "bundled_path": "reference/masks/mask_000170_1788453730_473886966.png",
+      "sha256": "afbd29a4ded08a3ec81a1ea7fe08e499fa39e74df941efc5ccc3a655aba7073e",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000171_1788453730_555623054.png",
+      "bundled_path": "reference/masks/mask_000171_1788453730_555623054.png",
+      "sha256": "356415120a573f5eb1b4d81399f705ec19dea415295bbbf747056e2ab38e4950",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000172_1788453730_752964973.png",
+      "bundled_path": "reference/masks/mask_000172_1788453730_752964973.png",
+      "sha256": "85189c472c0dd55d5cb19ac16cd11536ac361643b8eceac119c62abb3519ce20",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000173_1788453730_907238960.png",
+      "bundled_path": "reference/masks/mask_000173_1788453730_907238960.png",
+      "sha256": "b1718ebbcc672b26e4340796b5311217af6c2c656eb77395947a1efb50a4901e",
+      "bytes": 1350
+    },
+    {
+      "source_relative_path": "masks/mask_000174_1788453731_31502962.png",
+      "bundled_path": "reference/masks/mask_000174_1788453731_31502962.png",
+      "sha256": "6a30f782e3def0fefb5341fadb57b94b006c9ef2a51e7394309d1e80ec3e3da7",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000175_1788453731_188625097.png",
+      "bundled_path": "reference/masks/mask_000175_1788453731_188625097.png",
+      "sha256": "c0204eddeb005ee2d7796dddf2411f0cc187686a712c3a7a24179f0f3e4a287a",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000176_1788453731_344347953.png",
+      "bundled_path": "reference/masks/mask_000176_1788453731_344347953.png",
+      "sha256": "e2d6f6bb35a2d40a4008eb6da7c14a40151008688856a315700423d6530f1dfb",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000177_1788453731_505265951.png",
+      "bundled_path": "reference/masks/mask_000177_1788453731_505265951.png",
+      "sha256": "afbd29a4ded08a3ec81a1ea7fe08e499fa39e74df941efc5ccc3a655aba7073e",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000178_1788453731_665613889.png",
+      "bundled_path": "reference/masks/mask_000178_1788453731_665613889.png",
+      "sha256": "505a8bd2259061eaafc5a3b75c8b0aa34626576a2142c981c9a8bc4db5e0120a",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000179_1788453731_816140890.png",
+      "bundled_path": "reference/masks/mask_000179_1788453731_816140890.png",
+      "sha256": "58ba634be7defc39bf61bd9ab6b1769d0dcb05be5636c43555182e8efce044ed",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000180_1788453731_980938911.png",
+      "bundled_path": "reference/masks/mask_000180_1788453731_980938911.png",
+      "sha256": "47572475a669bba26f331e4bfc00efc42e5e4877521f09308981f21c9ec42a0c",
+      "bytes": 1350
+    },
+    {
+      "source_relative_path": "masks/mask_000181_1788453732_134919881.png",
+      "bundled_path": "reference/masks/mask_000181_1788453732_134919881.png",
+      "sha256": "afea39165cc29c51adb38cd1e3869d13670286bfd872e06dbcc420622921ab94",
+      "bytes": 1347
+    },
+    {
+      "source_relative_path": "masks/mask_000182_1788453732_218132019.png",
+      "bundled_path": "reference/masks/mask_000182_1788453732_218132019.png",
+      "sha256": "d4580c0237932a48023a8d416e53377bae066c017acda270c7a822cce73ba4dc",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000183_1788453732_413486003.png",
+      "bundled_path": "reference/masks/mask_000183_1788453732_413486003.png",
+      "sha256": "deb1f87b0ee820581807c7fdbdd8afd9a476c041a3059ed86725475d03fcb486",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000184_1788453732_530378103.png",
+      "bundled_path": "reference/masks/mask_000184_1788453732_530378103.png",
+      "sha256": "09ece3167c9c24c8c28d1bbbf85cdf01b2cdba9a53828671a84ce0b991dda9b1",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000185_1788453732_652344942.png",
+      "bundled_path": "reference/masks/mask_000185_1788453732_652344942.png",
+      "sha256": "e8735be047f319a5ec5da179b6a00f6871911d369ad84b24deff3b6a96c6653b",
+      "bytes": 1349
+    },
+    {
+      "source_relative_path": "masks/mask_000186_1788453732_766602039.png",
+      "bundled_path": "reference/masks/mask_000186_1788453732_766602039.png",
+      "sha256": "0a38df2174286c6cd904a763f3f225ce4b9740a116ae27181747b530569c23c9",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000187_1788453732_889436006.png",
+      "bundled_path": "reference/masks/mask_000187_1788453732_889436006.png",
+      "sha256": "dddf46929f32c6a8cf5eaac0dddd6ea4b08dacb2e393d3e1941edb5d1b030d12",
+      "bytes": 1351
+    },
+    {
+      "source_relative_path": "masks/mask_000188_1788453733_45432090.png",
+      "bundled_path": "reference/masks/mask_000188_1788453733_45432090.png",
+      "sha256": "97f39828a8483cb3ebfaf97bbd8acffcade9dff3cf0e4d1a5e9a9fde15cf9626",
+      "bytes": 1348
+    },
+    {
+      "source_relative_path": "masks/mask_000189_1788453733_168457031.png",
+      "bundled_path": "reference/masks/mask_000189_1788453733_168457031.png",
+      "sha256": "2150a15cf4ac9367565e9724c0cb10e7fd859db58200f48c2be769ca4a37d582",
+      "bytes": 1349
+    }
+  ]
+}

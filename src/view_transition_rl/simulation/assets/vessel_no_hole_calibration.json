@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "length_unit": "mm",
+  "world_T_phantom_mm": [
+    [
+      0.0,
+      0.9902680687415704,
+      0.13917310096006544,
+      78.1553013425511
+    ],
+    [
+      0.0,
+      -0.13917310096006544,
+      0.9902680687415704,
+      -19.062631867248008
+    ],
+    [
+      1.0,
+      0.0,
+      0.0,
+      20.03839111328125
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "phantom_T_world_mm": [
+    [
+      0.0,
+      0.0,
+      1.0,
+      -20.03839111328125
+    ],
+    [
+      0.9902680687415704,
+      -0.13917310096006544,
+      0.0,
+      -80.0477049118286
+    ],
+    [
+      0.13917310096006544,
+      0.9902680687415704,
+      0.0,
+      8.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "phantom_size_mm": [
+    70,
+    190,
+    40
+  ],
+  "probe_size_mm": [
+    40,
+    10
+  ],
+  "image_shape": [
+    480,
+    480
+  ],
+  "fov_mm": [
+    40,
+    40
+  ],
+  "reference_frame_count": 0,
+  "source_file": "vessel_no_hole.STL",
+  "sha256": "0a5fbd5a72d0ddda5b4c4ee54d0791dfed03fdc1e5462252ed7ad6fc00b09280",
+  "assumptions": {
+    "units": "Source coordinates interpreted as mm; no scaling.",
+    "orientation": "Source X -> phantom Y; source Z -> phantom X; source Y -> phantom Z, then rotate +8 degrees around phantom X so +Y slopes into +Z (depth).",
+    "placement": "Recenter rotated surface-plane bounds; shallowest vessel point 8 mm below surface; rigid transform without scaling."
+  },
+  "vessel_tilt_deg": 8,
+  "vessel_bounds_phantom_mm": [
+    [
+      -20.03839111328125,
+      -80.88274351758899,
+      8.0
+    ],
+    [
+      20.03839111328125,
+      80.88274351758899,
+      36.35518316971219
+    ]
+  ]
+}

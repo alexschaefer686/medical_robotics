@@ -1,0 +1,78 @@
+{
+  "phantom_id": "curved_arc",
+  "phantom_T_probe_mm": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "world_T_probe_mm": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "tilt_deg": 0.0,
+  "contact_model": "bottom_centre_on_plane_allow_penetration",
+  "last_action_accepted": true,
+  "constraint_reason": "",
+  "phantom_size_mm": [
+    100.0,
+    100.0,
+    40.0
+  ],
+  "probe_size_mm": [
+    40.0,
+    10.0
+  ],
+  "image_shape": [
+    480,
+    480
+  ],
+  "fov_mm": [
+    40.0,
+    40.0
+  ],
+  "max_tilt_deg": 60.0,
+  "pixel_axes": "columns: probe +x; rows: probe +z; image plane: probe y=0"
+}
