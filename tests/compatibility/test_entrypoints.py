@@ -50,6 +50,7 @@ import view_transition_rl.envs
 import view_transition_rl.agents
 import view_transition_rl.training
 import view_transition_rl.evaluation
+import view_transition_rl.visual_servoing
 assert not any(name in sys.modules for name in ['vtk', 'vtkmodules', 'pyvista', 'torch', 'gymnasium'])
 """
         with tempfile.TemporaryDirectory() as directory:
