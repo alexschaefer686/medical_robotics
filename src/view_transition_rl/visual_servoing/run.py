@@ -1,8 +1,11 @@
-"""Closed loop: mask -> controller -> probe movement, with a live 3D view.
+"""Closed loop: mask -> controller -> relative probe movement, with a live 3D view.
 
 python -m view_transition_rl.visual_servoing.run --offset-x 8 --delay 0.5
 python -m view_transition_rl.visual_servoing.run --no-view --output outputs/visual_servoing/run
 
+The controller only gets the mask; its relative motions are executed like a robot
+that keeps skin contact (move_probe) and reported back with controller.moved().
+The true pose is used for logging and for drawing only.
 Can also be started directly (e.g. the VS Code play button), hence absolute imports.
 """
 
@@ -18,16 +21,29 @@ import numpy as np
 from view_transition_rl.envs.metrics import longitudinal_metrics
 from view_transition_rl.simulation import PHANTOMS, PhantomEnv
 from view_transition_rl.simulation.geometry import euler_from_pose
-from view_transition_rl.visual_servoing.controllers import CONTROLLERS
+from view_transition_rl.visual_servoing.controllers import CONTROLLERS, contact_motion
 from view_transition_rl.visual_servoing.cylinder_fit import fit_bent_cylinder
 from view_transition_rl.visual_servoing.plane_fit import fit_image_plane
 from view_transition_rl.visual_servoing.features import boundary_nodes
 
 
-# Arrow key -> body displacement direction along phantom (x, y).
+# Arrow key -> body displacement direction along phantom (x, y); unknown to the controller.
 BODY_KEYS = {"Left": (-1, 0), "Right": (1, 0), "Up": (0, 1), "Down": (0, -1)}
-# WASD -> probe movement along its own local (x, y), applied with env.step() like a controller move.
+# WASD -> relative probe movement along its own x / y, executed like a controller move and
+# reported to the controller (known motion).
 PROBE_KEYS = {"a": (-1, 0), "d": (1, 0), "w": (0, 1), "s": (0, -1)}
+
+
+def move_probe(env, action):
+    """Execute a relative probe motion like a robot that keeps skin contact (controllers.contact_motion)."""
+    pose = np.array(env.get_state()["phantom_T_probe_mm"])
+    skin_normal = pose[2, :3]  # phantom +z (into the tissue) in the probe frame
+    return env.set_pose(pose @ contact_motion(action, skin_normal))
+
+
+def to_frame(points, transform):
+    """Apply a 4x4 transform to (N, 3) points."""
+    return np.asarray(points) @ transform[:3, :3].T + transform[:3, 3]
 
 
 def move_body(env, dx_mm, dy_mm):
@@ -72,18 +88,40 @@ def status_text(row, notice="", phase=""):
             f"body x {row['body_x_mm']:+.1f}  y {row['body_y_mm']:+.1f} mm{notice}")
 
 
-def show_fits(cloud_view, cylinder, plane, title, curve=None, weights=None):
-    """Draw a fitted cylinder and image plane (either may be None) in the point cloud window;
-    curve and weights mark the centreline part the plane was fitted to."""
-    cloud_view.set_fit(cylinder, label="cylinder fit", curve=curve, weights=weights)
+def show_fits(cloud_view, cylinder, plane, title, curve=None, weights=None, transform=np.eye(4)):
+    """Draw a fitted cylinder and image plane (either may be None) in the point cloud window.
+    curve and weights mark the centreline part the plane was fitted to; transform maps the
+    fits' frame (e.g. the controller's probe frame) to the window's frame."""
+    if cylinder is not None and curve is None:
+        curve = cylinder.centreline(200)
+    cloud_view.set_fit(cylinder, label="cylinder fit", weights=weights,
+                       curve=None if curve is None else to_frame(curve, transform))
     if plane is None or cylinder is None:
         cloud_view.set_plane(None)
         return
-    x, y, roll, _, yaw = plane.pose_5dof
-    cloud_view.set_plane(plane.patch(cylinder.centreline(100)),
-                         f"{title}\n"
-                         f"x {x:+.1f}  y {y:+.1f} mm  roll {np.rad2deg(roll):+.1f}  yaw {np.rad2deg(yaw):+.1f} deg\n"
+    cloud_view.set_plane(to_frame(plane.patch(cylinder.centreline(100)), transform),
+                         f"{title}\ntilt from vertical {np.rad2deg(plane.roll):+.1f} deg\n"
                          f"centreline rms to plane {plane.rms:.2f} mm")
+
+
+def show_controller_fits(cloud_view, controller, transform=np.eye(4)):
+    """Draw the controller's cylinder, image plane and the points its fit used.
+    transform maps the controller's (current) probe frame to the window's frame.
+    Returns False (drawing nothing) while the controller has no fit of its own."""
+    if getattr(controller, "cylinder", None) is None:
+        return False
+    title = "image plane through probe x, y" if controller.phase_name == "track" else "closest image plane"
+    weighting = getattr(controller, "plane_weighting", None)
+    if weighting is not None:
+        title += f"\nfitted to centreline within {controller.plane_radius_mm:g} mm ({weighting})"
+    show_fits(cloud_view, controller.cylinder, controller.plane, title,
+              getattr(controller, "plane_curve", None), getattr(controller, "plane_weights", None), transform)
+    # Only the points its least squares used; the cloud only grows, so the
+    # indices stay valid even when the fit is from an earlier step.
+    frames = np.repeat(np.arange(len(controller.cloud)), [len(c) for c in controller.cloud])
+    used = controller.cylinder.used_index
+    cloud_view.draw_points(to_frame(controller.point_cloud[used], transform), frames[used], total=len(frames))
+    return True
 
 
 def run(controller, env, max_steps=None, view=None, output_dir=None, delay=0.0, body_step=1.0,
@@ -91,14 +129,15 @@ def run(controller, env, max_steps=None, view=None, output_dir=None, delay=0.0, 
     """Loop until the controller returns None, max_steps is reached (None = no limit)
     or the view is closed. delay: seconds per step, only to make the view watchable.
 
-    With a view, the arrow keys move the body by body_step mm (see move_body); the
-    controller only notices this through the mask. W/A/S/D move the probe by
-    probe_step mm along its local y/x axes, which the controller sees through the
-    mask and its pose. cloud_view (PointCloudView)
-    accumulates each step's measures["boundary_points"] and shows a bent cylinder
-    with a polynomial centreline of fit_degree fitted to them (0 = no fit), plus
-    the image plane closest to that centreline, pulled towards roll = 0 by
-    roll_weight (see plane_fit).
+    The controller gets only the mask; each action is executed with move_probe and,
+    if the simulator accepts it, reported with controller.moved(). With a view, the
+    arrow keys move the body by body_step mm (see move_body), which the controller
+    only notices through the mask. W/A/S/D move the probe by probe_step mm along its
+    own y/x axes as known motions (also reported with moved()). cloud_view
+    (PointCloudView) shows the controller's probe-frame reconstruction placed with the
+    true pose (for display only), or, before the controller has a fit, the window's own
+    bent cylinder with a polynomial centreline of fit_degree (0 = no fit) and the image
+    plane closest to it, pulled towards roll = 0 by roll_weight (see plane_fit).
     """
     controller.reset()
     trajectory = []
@@ -119,7 +158,10 @@ def run(controller, env, max_steps=None, view=None, output_dir=None, delay=0.0, 
         redraw("" if result.accepted else f"   body move rejected: {result.reason}")
 
     def nudge(dx, dy):
-        result = env.step([dx * probe_step, dy * probe_step, 0.0, 0.0, 0.0])
+        action = [dx * probe_step, dy * probe_step, 0.0, 0.0, 0.0]
+        result = move_probe(env, action)
+        if result.accepted:
+            controller.moved(action)  # a commanded motion, so the controller knows about it
         redraw("" if result.accepted else f"   probe move rejected: {result.reason}")
 
     if view is not None:
@@ -146,30 +188,34 @@ def run(controller, env, max_steps=None, view=None, output_dir=None, delay=0.0, 
                 time.sleep(0.01)
         # Observe after the wait so the controller sees body moves made meanwhile.
         mask, row = observe(env, step, body)
+        seen_from = probe_pose(env, body)  # true pose, for drawing only
+        called = max_steps is None or step < max_steps
         action = None
-        if max_steps is None or step < max_steps:
-            action = controller(mask, probe_pose(env, body))
+        if called:
+            action = controller(mask)
             row["phase"] = controller.phase_name
-            if cloud_view is not None and cloud_view.is_open:
-                added = cloud_view.add(controller.history[-1]["boundary_points"], step)
-                if getattr(controller, "cylinder", None) is not None:
-                    # The controller's own fits, refreshed every step while it tracks.
-                    title = ("image plane through probe x, y" if controller.phase_name == "track"
-                             else "closest image plane")
-                    weighting = getattr(controller, "plane_weighting", None)
-                    if weighting is not None:
-                        title += f"\nfitted to centreline within {controller.plane_radius_mm:g} mm ({weighting})"
-                    show_fits(cloud_view, controller.cylinder, controller.plane, title,
-                              getattr(controller, "plane_curve", None), getattr(controller, "plane_weights", None))
-                elif added and fit_degree > 0:
-                    cylinder = fit_bent_cylinder(cloud_view.points, fit_degree)
-                    plane = None if cylinder is None else fit_image_plane(
-                        cylinder.centreline(100), roll_weight, controller.history[-1]["pose_5dof"][4])
-                    show_fits(cloud_view, cylinder, plane, f"closest image plane (roll weight {roll_weight:g} mm^2)")
         row["action"] = "" if action is None else json.dumps([round(float(a), 6) for a in action])
         if action is not None:
-            result = env.step(action)
+            result = move_probe(env, action)
             row["rejected"] = "" if result.accepted else result.reason
+            if result.accepted:
+                controller.moved(action)
+        if called and cloud_view is not None and cloud_view.is_open:
+            added = cloud_view.add(to_frame(controller.history[-1]["boundary_points"], seen_from), step)
+            if show_controller_fits(cloud_view, controller, transform=probe_pose(env, body)):
+                pass  # the controller's own fits, refreshed every step while it tracks
+            elif added:
+                cylinder = fit_bent_cylinder(cloud_view.points, fit_degree) if fit_degree > 0 else None
+                if fit_degree > 0:
+                    plane = None if cylinder is None else fit_image_plane(
+                        cylinder.centreline(100), roll_weight, euler_from_pose(seen_from)[2])
+                    show_fits(cloud_view, cylinder, plane, f"closest image plane (roll weight {roll_weight:g} mm^2)")
+                if cylinder is None:
+                    cloud_view.draw_points()  # no fit yet: all recorded points
+                else:
+                    used = cylinder.used_index
+                    cloud_view.draw_points(cloud_view.points[used], cloud_view.order[used],
+                                           total=len(cloud_view.points))
         trajectory.append(row)
         if action is None:
             break
@@ -188,7 +234,7 @@ def run(controller, env, max_steps=None, view=None, output_dir=None, delay=0.0, 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--controller", choices=sorted(CONTROLLERS), default="sequential")
-    parser.add_argument("--phantom", choices=sorted(PHANTOMS), default="vessel_no_hole") #reference, vessel_no_hole or curved_arc
+    parser.add_argument("--phantom", choices=sorted(PHANTOMS), default="curved_arc") #reference, vessel_no_hole or curved_arc
     parser.add_argument("--max-steps", type=int,
                         help="Stop after this many controller steps; default: no limit with the view, 100 without")
     parser.add_argument("--start-at-zero", action="store_true",

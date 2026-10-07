@@ -34,6 +34,14 @@ class TestBentCylinderFit(unittest.TestCase):
         self.assertLess(error[2:-2].max(), 0.05)  # ends are extrapolated by the fit's t_range
         self.assertAlmostEqual(np.abs(cylinder.surface_distances(points)).mean(), 0.04, delta=0.02)
 
+    def test_used_index_lists_the_fitted_points(self):
+        points, _ = bent_tube(2.5, n_rings=200, per_ring=60)  # 12,000 points
+        cylinder = fit_bent_cylinder(points, max_points=5000)
+        np.testing.assert_array_equal(cylinder.used_index, np.arange(0, 12000, 3))  # every 3rd point
+        refit = fit_bent_cylinder(points[cylinder.used_index], max_points=5000)
+        self.assertEqual(len(refit.used_index), len(cylinder.used_index))  # no further subsampling
+        self.assertAlmostEqual(refit.radius, cylinder.radius, places=9)
+
     def test_needs_elongated_points(self):
         ring, _ = bent_tube(2.5, n_rings=1, per_ring=200)
         self.assertIsNone(fit_bent_cylinder(ring))

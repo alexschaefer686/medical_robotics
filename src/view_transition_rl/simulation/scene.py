@@ -25,6 +25,25 @@ class _Window:
 
     _shown = False
 
+    def on_key(self, key, callback):
+        """Bind a VTK key symbol (e.g. "Left", "Up", "w") to callback(), replacing PyVista's default
+        binding (Up/Down zoom the camera by default). Letters are bound in both cases, and VTK's
+        own letter shortcut for them (e.g. W wireframe, S surface, E quit) is suppressed."""
+        keys = [key, key.upper()] if len(key) == 1 and key.isalpha() else [key]
+        for k in keys:
+            self.plotter.iren.clear_events_for_key(k)
+            self.plotter.add_key_event(k, callback)
+        if len(key) == 1:
+            if not hasattr(self, "_bound_chars"):
+                self._bound_chars = set()
+                # An observer on the style replaces its OnChar handling; unbound keys are passed on.
+                self.plotter.iren.style.AddObserver("CharEvent", self._on_char)
+            self._bound_chars.update(keys)
+
+    def _on_char(self, style, _event):
+        if self.plotter.iren.interactor.GetKeySym() not in self._bound_chars:
+            style.OnChar()
+
     def show(self, block=False):
         """Open the window. block=False returns immediately so a loop can keep updating."""
         if not block and not self._shown:
@@ -150,25 +169,6 @@ class SceneView(_Window):
         p.add_mesh(self.pv.PolyData(points), color="red", point_size=3, lighting=False,
                    name="boundary", reset_camera=False, render=False)
 
-    def on_key(self, key, callback):
-        """Bind a VTK key symbol (e.g. "Left", "Up", "w") to callback(), replacing PyVista's default
-        binding (Up/Down zoom the camera by default). Letters are bound in both cases, and VTK's
-        own letter shortcut for them (e.g. W wireframe, S surface, E quit) is suppressed."""
-        keys = [key, key.upper()] if len(key) == 1 and key.isalpha() else [key]
-        for k in keys:
-            self.plotter.iren.clear_events_for_key(k)
-            self.plotter.add_key_event(k, callback)
-        if len(key) == 1:
-            if not hasattr(self, "_bound_chars"):
-                self._bound_chars = set()
-                # An observer on the style replaces its OnChar handling; unbound keys are passed on.
-                self.plotter.iren.style.AddObserver("CharEvent", self._on_char)
-            self._bound_chars.update(keys)
-
-    def _on_char(self, style, _event):
-        if self.plotter.iren.interactor.GetKeySym() not in self._bound_chars:
-            style.OnChar()
-
     def set_help(self, text):
         self.plotter.subplot(0, 0)
         self.plotter.add_text(text, position=(.02, .055), viewport=True, font_size=10,
@@ -179,57 +179,85 @@ class SceneView(_Window):
 class PointCloudView(_Window):
     """Separate window accumulating 3D points (e.g. vessel boundary) over the steps.
 
-    The vessel mesh and phantom outline are drawn faintly for reference;
-    body_offset shifts them like in SceneView. Points are coloured by step.
+    add() collects points; draw_points() displays all of them or a chosen subset,
+    e.g. only the points a fit used. With a simulator env, the vessel mesh and
+    phantom outline are drawn faintly for reference; body_offset shifts them like
+    in SceneView. env=None (e.g. on a real robot) shows only the data, and the
+    camera frames the first points drawn. Points are coloured by when they were recorded.
     """
 
-    def __init__(self, env, *, off_screen=False, window_size=(800, 700), title="Boundary point cloud"):
+    def __init__(self, env=None, *, off_screen=False, window_size=(800, 700), title="Boundary point cloud"):
         pv = _import_pyvista()
         self.pv, self.env = pv, env
         self.plotter = p = pv.Plotter(window_size=window_size, off_screen=off_screen, title=title)
         p.set_background("#111d2b")
-        width, length, depth = env.config.phantom_size_mm
-        box = pv.Box(bounds=(-width / 2, width / 2, -length / 2, length / 2, 0, depth))
-        self.body_actors = [
-            p.add_mesh(box, style="wireframe", color="#6c99a8", line_width=1, opacity=.5, reset_camera=False),
-            p.add_mesh(pv.wrap(env.mesh), color="#ef6c78", opacity=.12, reset_camera=False),
-        ]
-        p.add_text(f"{title}\ncolour: step (dark = early, yellow = late)", position="upper_left",
+        self.body_actors = []
+        scale = 60.0
+        if env is not None:
+            width, length, depth = env.config.phantom_size_mm
+            box = pv.Box(bounds=(-width / 2, width / 2, -length / 2, length / 2, 0, depth))
+            self.body_actors = [
+                p.add_mesh(box, style="wireframe", color="#6c99a8", line_width=1, opacity=.5, reset_camera=False),
+                p.add_mesh(pv.wrap(env.mesh), color="#ef6c78", opacity=.12, reset_camera=False),
+            ]
+            scale = max(scale, length * .6, width * .6, depth * 1.2)
+        p.add_text(f"{title}\ncolour: when recorded (dark = early, yellow = late)", position="upper_left",
                    font_size=10, color="#d6e2ee")
         p.add_text("", position="lower_left", font_size=10, color="#b8c9da", name="count")
+        # +z points into the tissue, so the camera looks from above the surface with -z up.
         p.camera_position = [(125, -175, -135), (0, 0, 10), (0, 0, -1)]
         p.camera.parallel_projection = True
-        p.camera.parallel_scale = max(60, length * .6, width * .6, depth * 1.2)
+        p.camera.parallel_scale = scale
         self.chunks, self.steps = [], []
+        self._framed = env is not None
 
     @property
     def points(self):
         """All accumulated points, (N, 3)."""
         return np.vstack(self.chunks) if self.chunks else np.empty((0, 3))
 
+    @property
+    def order(self):
+        """Step at which each accumulated point was added, (N,)."""
+        return np.concatenate(self.steps) if self.steps else np.empty(0)
+
     def add(self, points, step):
-        """Append one step's (N, 3) points; an exact repeat of the last chunk is skipped.
-        Returns True if the points were added."""
+        """Collect one step's (N, 3) points; an exact repeat of the last chunk is skipped.
+        Returns True if the points were added. Display them with draw_points()."""
         points = np.asarray(points, dtype=float).reshape(-1, 3)
         last = self.chunks[-1] if self.chunks else None
         if len(points) == 0 or (last is not None and last.shape == points.shape and np.allclose(last, points)):
             return False
         self.chunks.append(points)
         self.steps.append(np.full(len(points), step))
-        cloud = self.pv.PolyData(np.vstack(self.chunks))
-        cloud["step"] = np.concatenate(self.steps)
-        p = self.plotter
-        p.add_mesh(cloud, scalars="step", cmap="viridis", point_size=3, show_scalar_bar=False,
-                   lighting=False, name="cloud", reset_camera=False, render=False)
-        p.add_text(f"{cloud.n_points:,} points from {len(self.chunks)} frames", position="lower_left",
-                   font_size=10, color="#b8c9da", name="count", render=False)
-        p.render()
         return True
+
+    def draw_points(self, points=None, order=None, total=None):
+        """Display points coloured by order (dark = early, yellow = late); default: all accumulated.
+        total: size of the cloud the points were taken from, e.g. when showing a fit's subset."""
+        if points is None:
+            points, order = self.points, self.order
+        p = self.plotter
+        if len(points) == 0:
+            p.remove_actor("cloud", render=False)
+        else:
+            cloud = self.pv.PolyData(np.asarray(points, dtype=float))
+            cloud["order"] = np.asarray(order, dtype=float)
+            p.add_mesh(cloud, scalars="order", cmap="viridis", point_size=3, show_scalar_bar=False,
+                       lighting=False, name="cloud", reset_camera=False, render=False)
+            if not self._framed:  # no phantom to frame: centre the camera on the first data
+                p.camera.focal_point = cloud.center
+                p.camera.position = np.add(cloud.center, (125, -175, -145))
+                self._framed = True
+        label = (f"{len(points):,} points from {len(self.chunks)} frames" if total is None
+                 else f"{len(points):,} points used by the fit (of {total:,} recorded)")
+        p.add_text(label, position="lower_left", font_size=10, color="#b8c9da", name="count", render=False)
+        p.render()
 
     def set_fit(self, cylinder, label="fit", curve=None, weights=None):
         """Draw a fitted bent cylinder (object with centreline(n) and radius), or remove it with None.
-        curve, weights: optional (N, 3) centreline samples and their weights in a subsequent fit;
-        the tube is then built along curve and shaded from dim (weight 0) to bright."""
+        curve: optional (N, 3) centreline samples to build the tube along (e.g. already moved into
+        this window's frame); weights: their weights in a subsequent fit, shaded dim (0) to bright."""
         p = self.plotter
         if cylinder is None:
             for name in ("fit_tube", "fit_line"):
@@ -238,7 +266,7 @@ class PointCloudView(_Window):
                        font_size=10, color="#f0c05a", name="fit_text", render=False)
         else:
             weighted = curve is not None and weights is not None and len(curve) == len(weights)
-            line = self.pv.lines_from_points(np.asarray(curve) if weighted else cylinder.centreline(200))
+            line = self.pv.lines_from_points(np.asarray(curve) if curve is not None else cylinder.centreline(200))
             if weighted:
                 line["weight"] = np.asarray(weights, dtype=float)
                 style = dict(scalars="weight", cmap=["#4a3d22", "#ffd36b"], show_scalar_bar=False,
@@ -250,6 +278,22 @@ class PointCloudView(_Window):
             p.add_mesh(line, color="#f0c05a", line_width=3, name="fit_line", reset_camera=False, render=False)
             p.add_text(f"{label}: radius {cylinder.radius:.2f} mm\nrms {cylinder.rms:.3f} mm",
                        position="upper_right", font_size=10, color="#f0c05a", name="fit_text", render=False)
+        p.render()
+
+    def set_help(self, text):
+        self.plotter.add_text(text, position=(.02, .88), viewport=True, font_size=10,
+                              color="#b8c9da", name="help", render=False)
+
+    def set_probe(self, pose, fov_mm=(40.0, 40.0)):
+        """Draw a probe pose (4x4, mm) as its image plane and x/y/z axes (red/green/blue)."""
+        p, pose = self.plotter, np.asarray(pose, dtype=float)
+        fw, fd = fov_mm
+        corners = np.array([[-fw / 2, 0, 0], [fw / 2, 0, 0], [fw / 2, 0, fd], [-fw / 2, 0, fd]])
+        p.add_mesh(self.pv.PolyData(corners @ pose[:3, :3].T + pose[:3, 3], [4, 0, 1, 2, 3]),
+                   color="#e4b775", opacity=.2, show_edges=True, name="probe_plane", reset_camera=False, render=False)
+        for i, (label, color) in enumerate(zip("xyz", ["#fc777a", "#8adb98", "#79b4ff"])):
+            p.add_mesh(self.pv.Arrow(start=pose[:3, 3], direction=pose[:3, i], scale=15), color=color,
+                       name="probe_axis_" + label, reset_camera=False, render=False)
         p.render()
 
     def set_plane(self, corners, text=""):

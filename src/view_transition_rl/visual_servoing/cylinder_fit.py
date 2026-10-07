@@ -11,7 +11,7 @@ Levenberg-Marquardt; the closest points are found by Gauss-Newton steps along
 the curve, so by the envelope theorem the partial derivatives give the Jacobian.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -26,6 +26,12 @@ class BentCylinder:
     radius: float        # mm
     t_range: tuple       # centreline parameter range covered by the points, mm along u
     rms: float           # RMS distance of the points to the cylinder surface, mm
+    used_index: np.ndarray  # indices of the input points the least squares used (even subsample)
+
+    def transformed(self, matrix):
+        """The same cylinder expressed in another frame: points p -> matrix @ p (rigid 4x4)."""
+        matrix = np.asarray(matrix, dtype=float)
+        return replace(self, origin=matrix[:3, :3] @ self.origin + matrix[:3, 3], axes=self.axes @ matrix[:3, :3].T)
 
     def centreline(self, n=100):
         """(n, 3) points along the centreline over t_range."""
@@ -46,14 +52,15 @@ def fit_bent_cylinder(points, degree=3, *, max_points=5000, min_elongation=1.5, 
 
     min_elongation: required std along the main axis relative to the largest
     perpendicular std; a ring from a single frame does not define an axis.
-    max_points: larger clouds are subsampled evenly for speed.
+    max_points: larger clouds are subsampled evenly (every k-th point) for speed;
+    the result's used_index lists the points used.
     """
     points = np.asarray(points, dtype=float).reshape(-1, 3)
     n_params = 2 * (degree + 1) + 1
     if len(points) < 3 * n_params:
         return None
-    if len(points) > max_points:
-        points = points[::int(np.ceil(len(points) / max_points))]
+    used_index = np.arange(len(points))[::int(np.ceil(len(points) / max_points))]
+    points = points[used_index]
     origin = points.mean(axis=0)
     axes = np.linalg.svd(points - origin, full_matrices=False)[2]
     q = (points - origin) @ axes.T
@@ -100,7 +107,8 @@ def fit_bent_cylinder(points, degree=3, *, max_points=5000, min_elongation=1.5, 
 
     return BentCylinder(origin=origin, axes=axes, scale=scale, coef_a=theta[:degree + 1],
                         coef_b=theta[degree + 1:-1], radius=float(abs(theta[-1])),
-                        t_range=(float(t.min()), float(t.max())), rms=float(np.sqrt(cost / len(q))))
+                        t_range=(float(t.min()), float(t.max())), rms=float(np.sqrt(cost / len(q))),
+                        used_index=used_index)
 
 
 def _local(t, a, b, scale):
