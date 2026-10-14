@@ -202,7 +202,7 @@ class SequentialController(Controller):
     samples and weights used.
     """
 
-    def __init__(self, rotate_deg=180.0, rotate_steps=18, align_steps=1, gain=0.5,
+    def __init__(self, rotate_deg=180.0, rotate_steps=18, align_steps=5, gain=0.5,
                  centre_tol_mm=0.1, max_centre_steps=30, fit_degree=3, roll_weight=1.0, track=True,
                  track_gain=0.5, plane_weighting="linear", plane_radius_mm=FOV_MM[0] / 2,
                  plane_distance="xy", **kwargs):
