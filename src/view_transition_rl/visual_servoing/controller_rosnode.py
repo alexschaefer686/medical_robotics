@@ -107,7 +107,7 @@ class SequentialServoNode(object):
         self.action_topic = rospy.get_param('~action_topic', '/probe_action')
         self.command_period_sec = rospy.get_param('~command_period_sec', 4.0)
         self.settle_sec = rospy.get_param('~settle_sec', 3.0)
-        self.min_vessel_pixels = rospy.get_param('~min_vessel_pixels', 50)
+        self.min_vessel_pixels = rospy.get_param('~min_vessel_pixels', 10)
         self.fov_mm = (rospy.get_param('~fov_width_mm', 40.0), rospy.get_param('~fov_depth_mm', 40.0))
         self.image_x_sign = rospy.get_param('~image_x_sign', 1.0)
         self.max_step_mm = 1000.0 * rospy.get_param('~max_step_m', 0.005)
