@@ -281,7 +281,7 @@ class PointCloudView(_Window):
         p.render()
 
     def set_help(self, text):
-        self.plotter.add_text(text, position=(.02, .88), viewport=True, font_size=10,
+        self.plotter.add_text(text, position=(.02, .80), viewport=True, font_size=10,
                               color="#b8c9da", name="help", render=False)
 
     def set_probe(self, pose, fov_mm=(40.0, 40.0)):

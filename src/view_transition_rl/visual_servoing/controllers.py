@@ -139,11 +139,17 @@ class Controller:
         """Report that the probe executed the relative motion `action` (from this controller
         or anyone else, e.g. the user); moves the point cloud and skin normal into the new
         probe frame. Unreported motion (e.g. the patient moving) is not accounted for."""
-        delta = contact_motion(action, self.surface_normal)
+        return self.apply_motion(contact_motion(action, self.surface_normal))
+
+    def apply_motion(self, delta):
+        """Report an executed rigid motion (4x4, probe frame before the move) as is, without the
+        skin-contact sliding of moved(), e.g. a deliberate move along the probe axis. Returns delta;
+        old-frame points p become inv(delta) @ p."""
+        delta = np.asarray(delta, dtype=float)
         rotation, translation = delta[:3, :3], delta[:3, 3]
         self.cloud = [(chunk - translation) @ rotation for chunk in self.cloud]  # R^T (p - t) per point
         self.surface_normal = rotation.T @ self.surface_normal
-        return delta  # executed motion; old-frame points p become inv(delta) @ p
+        return delta
 
     def act(self, mask, measures):
         """Return the movement for this step; measures == self.history[-1]."""
@@ -214,9 +220,10 @@ class SequentialController(Controller):
         self.cylinder = self.plane = self.align_target = None
         self.plane_curve = self.plane_weights = None
 
-    def moved(self, action):
-        """As Controller.moved(), and keeps the fits and the alignment target in the current probe frame."""
-        to_new_frame = np.linalg.inv(super().moved(action))
+    def apply_motion(self, delta):
+        """As Controller.apply_motion() (also used by moved()), and keeps the fits and the
+        alignment target in the current probe frame."""
+        to_new_frame = np.linalg.inv(super().apply_motion(delta))
         if self.cylinder is not None:
             self.cylinder = self.cylinder.transformed(to_new_frame)
         if self.plane is not None:

@@ -32,10 +32,17 @@ perpendicular to the skin at node start; that defines "roll = 0"). The
 reconstruction window shows the probe frame: the probe stays at the origin and
 the reconstruction moves around it.
 
-W/A/S/D in the reconstruction window send user moves of ~probe_step_mm along the
-probe's y (W/S) and x (A/D) through the same path (limits apply, and they are
-reported to the controller, so they are known motions). Keys pressed within
-~settle_sec of the previous command are ignored, as the robot would drop them.
+The node starts PAUSED: the controller is only called after Enter (in the
+reconstruction window, or in the terminal when started with rosrun), so the probe
+can be positioned first. Enter again pauses / resumes. Keys in the reconstruction
+window send user moves through the same path (limits apply, and they are reported
+to the controller, so they are known motions), paused or not:
+  W/A/S/D  ~probe_step_mm along the probe's y (W/S) and x (A/D)
+  R/F      ~z_step_mm along the probe axis: R lifts (-z, out of the tissue), F presses (+z).
+           Reported as a plain shift (no contact sliding): the cloud stays consistent
+           if the tissue does not deform, and the new tip becomes the contact point.
+Keys pressed within ~settle_sec of the previous command are ignored, as the robot
+would drop them.
 
 IMPORTANT: there is no real image-plane calibration (probe_to_image is an
 uncalibrated placeholder elsewhere in the source workspace too), so ~fov_width_mm,
@@ -58,15 +65,18 @@ Parameters (private):
   ~max_step_m                  max translation per command (0.005)
   ~max_rotation_deg            max rotation per command (10.0)
   ~probe_step_mm               W/A/S/D step (1.0)
+  ~z_step_mm                   R/F step (0.5)
   ~controller                  dict of SequentialController keyword arguments, e.g.
                                {rotate_deg: 90, rotate_steps: 18, align_steps: 5, track: true}
-  ~show_plot                   open the reconstruction window (True; needed for W/A/S/D)
+  ~show_plot                   open the reconstruction window (True; needed for the keys,
+                               except Enter in the terminal)
   ~dry_run                     log the motions instead of publishing them (False)
 
 Requires numpy and this package (view_transition_rl, Python >= 3.10) with its "gui"
 extra for the plot, in addition to the normal rospy deps.
 """
 
+import sys
 import threading
 
 import numpy as np
@@ -79,6 +89,9 @@ from view_transition_rl.visual_servoing.controllers import (SequentialController
 
 # Key -> user move direction along the probe's own (x, y).
 PROBE_KEYS = {"a": (-1, 0), "d": (1, 0), "w": (0, 1), "s": (0, -1)}
+# Key -> user move direction along the probe axis: R lifts (-z, out of the tissue), F presses (+z).
+DEPTH_KEYS = {"r": -1, "f": 1}
+START_KEYS = ("Return", "KP_Enter")
 
 
 def mask_from_msg(msg):
@@ -100,13 +113,16 @@ class SequentialServoNode(object):
         self.max_step_mm = 1000.0 * rospy.get_param('~max_step_m', 0.005)
         self.max_rotation = np.deg2rad(rospy.get_param('~max_rotation_deg', 10.0))
         self.probe_step_mm = rospy.get_param('~probe_step_mm', 1.0)
+        self.z_step_mm = rospy.get_param('~z_step_mm', 1.0)
         self.dry_run = rospy.get_param('~dry_run', False)
         controller_kwargs = dict(rospy.get_param('~controller', {}))
         controller_kwargs.setdefault('fov_mm', self.fov_mm)
 
         self.controller = SequentialController(**controller_kwargs)
         self.controller.reset()
+        self.running = False  # the controller only runs after Enter
         self.done = False
+        self._start_requested = False
         self._last_command_time = -np.inf
 
         self.view = None
@@ -116,8 +132,14 @@ class SequentialServoNode(object):
             self.view.set_probe(np.eye(4), self.fov_mm)  # the probe is always at the origin of its frame
             for key, (dx, dy) in PROBE_KEYS.items():
                 self.view.on_key(key, lambda dx=dx, dy=dy: self._user_move(dx, dy))
-            self.view.set_help(f"W/A/S/D: move probe {self.probe_step_mm:g} mm along its own y (W/S) and x (A/D)")
+            for key, direction in DEPTH_KEYS.items():
+                self.view.on_key(key, lambda direction=direction: self._user_depth(direction))
+            for key in START_KEYS:
+                self.view.on_key(key, self._request_toggle)
+            self._update_help()
             self.view.show()
+        if sys.stdin is not None and sys.stdin.isatty():  # Enter in the terminal works too (rosrun, not roslaunch)
+            threading.Thread(target=self._read_terminal, daemon=True).start()
 
         self._lock = threading.Lock()
         self._latest_mask, self._mask_time = None, -np.inf
@@ -129,18 +151,46 @@ class SequentialServoNode(object):
             self.mask_topic, self.action_topic, self.command_period_sec, self.fov_mm[0], self.fov_mm[1],
             self.image_x_sign, self.max_step_mm, np.rad2deg(self.max_rotation), ", DRY RUN" if self.dry_run else ""
         )
+        rospy.loginfo("sequential_servo: paused; position the probe (W/A/S/D, R/F), then press Enter to start")
 
     def _on_mask(self, msg):
         with self._lock:
             self._latest_mask, self._mask_time = msg, rospy.get_time()
 
+    def _read_terminal(self):
+        while not rospy.is_shutdown():
+            if sys.stdin.readline() == "":
+                return  # stdin closed
+            self._request_toggle()
+
+    def _request_toggle(self):
+        """Enter: start or pause the controller (applied by the main loop)."""
+        self._start_requested = True
+
+    def _update_help(self):
+        if self.view is None:
+            return
+        state = ("FINISHED" if self.done else "RUNNING - Enter: pause" if self.running
+                 else "PAUSED - Enter: start the controller")
+        self.view.set_help(f"{state}\n"
+                           f"W/A/S/D: move probe {self.probe_step_mm:g} mm along its own y (W/S) and x (A/D)\n"
+                           f"R/F: lift / press probe {self.z_step_mm:g} mm along its axis")
+        self.view.plotter.render()
+
     def spin(self):
-        """Main thread: controller steps at the command period; the plot window (and its keys)
-        stays responsive in between."""
+        """Main thread: controller steps at the command period while running; the plot window
+        (and its keys) stays responsive in between."""
         rate = rospy.Rate(30)
         next_command = rospy.get_time()
         while not rospy.is_shutdown():
-            if not self.done and rospy.get_time() >= next_command:
+            if self._start_requested:
+                self._start_requested = False
+                if not self.done:
+                    self.running = not self.running
+                    next_command = rospy.get_time()  # first step right away
+                    rospy.loginfo("sequential_servo: controller %s", "started" if self.running else "paused")
+                    self._update_help()
+            if self.running and not self.done and rospy.get_time() >= next_command:
                 # Retry soon if there was no usable mask yet, otherwise wait a full period.
                 next_command = rospy.get_time() + (self.command_period_sec if self.step() else 0.2)
             if self.view is not None and self.view.is_open:
@@ -170,38 +220,57 @@ class SequentialServoNode(object):
         if action is None:
             self.done = True
             rospy.loginfo("sequential_servo: sequence finished")
+            self._update_help()
         else:
             self._send(action, self.controller.phase_name)
         return True
 
-    def _user_move(self, dx, dy):
+    def _robot_busy(self):
         if rospy.get_time() < self._last_command_time + self.settle_sec:
             rospy.loginfo("sequential_servo: robot still busy with the last move; key ignored")
+            return True
+        return False
+
+    def _user_move(self, dx, dy):
+        if not self._robot_busy():
+            self._send([dx * self.probe_step_mm, dy * self.probe_step_mm, 0.0, 0.0, 0.0], "user")
+
+    def _user_depth(self, direction):
+        """Move along the probe axis; reported to the controller as is (no skin-contact sliding)."""
+        if self._robot_busy():
             return
-        self._send([dx * self.probe_step_mm, dy * self.probe_step_mm, 0.0, 0.0, 0.0], "user")
+        translation, _ = self._publish(np.array([0.0, 0.0, direction * self.z_step_mm]), np.zeros(3), "user")
+        delta = np.eye(4)
+        delta[:3, 3] = translation
+        self.controller.apply_motion(delta)
+        self._update_plot()
 
     def _send(self, action, source):
-        """Publish a relative probe motion (within the limits), report it to the controller, redraw."""
+        """Publish a controller-style action (within the limits), report it to the controller, redraw."""
         translation = np.array([action[0], action[1], 0.0])  # mm, probe frame
         rotation = rotation_vector(relative_motion(action)[:3, :3])
+        translation, rotation = self._publish(translation, rotation, source)
+        self.controller.moved([translation[0], translation[1], *xyz_angles(rotation_matrix(rotation))])
+        self._update_plot()
+
+    def _publish(self, translation, rotation, source):
+        """Publish one relative probe-frame motion (translation in mm, rotation vector in rad),
+        scaled down to the limits; returns what was sent."""
         scale = min(1.0, self.max_step_mm / max(np.linalg.norm(translation), 1e-12),
                     self.max_rotation / max(np.linalg.norm(rotation), 1e-12))
         translation, rotation = scale * translation, scale * rotation
-
         twist = Twist()
         twist.linear.x, twist.linear.y, twist.linear.z = (translation / 1000.0).tolist()
         twist.angular.x, twist.angular.y, twist.angular.z = rotation.tolist()
         if not self.dry_run:
             self.action_pub.publish(twist)
         self._last_command_time = rospy.get_time()
-        self.controller.moved([translation[0], translation[1], *xyz_angles(rotation_matrix(rotation))])
-
         rospy.loginfo(
-            "sequential_servo [%s]: %s linear (%.2f, %.2f) mm, angular (%.2f, %.2f, %.2f) deg%s",
-            source, "logged" if self.dry_run else "sent", translation[0], translation[1],
+            "sequential_servo [%s]: %s linear (%.2f, %.2f, %.2f) mm, angular (%.2f, %.2f, %.2f) deg%s",
+            source, "logged" if self.dry_run else "sent", *translation,
             *np.rad2deg(rotation), "" if scale == 1.0 else f" (scaled to {scale:.2f} by the limits)"
         )
-        self._update_plot()
+        return translation, rotation
 
     def _update_plot(self):
         if self.view is None or not self.view.is_open:
