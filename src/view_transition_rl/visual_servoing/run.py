@@ -234,7 +234,7 @@ def run(controller, env, max_steps=None, view=None, output_dir=None, delay=0.0, 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--controller", choices=sorted(CONTROLLERS), default="sequential")
-    parser.add_argument("--phantom", choices=sorted(PHANTOMS), default="curved_arc") #reference, vessel_no_hole or curved_arc
+    parser.add_argument("--phantom", choices=sorted(PHANTOMS), default="reference") #reference, vessel_no_hole or curved_arc
     parser.add_argument("--max-steps", type=int,
                         help="Stop after this many controller steps; default: no limit with the view, 100 without")
     parser.add_argument("--start-at-zero", action="store_true",
