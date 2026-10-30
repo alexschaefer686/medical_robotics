@@ -55,6 +55,8 @@ Parameters (private), in addition to those of controller_rosnode.py:
   ~still_sec                   how long the probe must have been at rest before a mask (0.5)
   ~still_mm, ~still_deg        motion that still counts as at rest (0.2, 0.2)
   ~level_tol_deg               remaining turn at which the levelling ends (0.5)
+  ~max_step_m, ~max_rotation_deg  as in controller_rosnode.py, but no limit by default (for
+                               simulation); set them (0.005, 10.0) on the real robot
 
 Requires lwr_controllers (for PoseRPY) in addition to the requirements of controller_rosnode.py.
 """
@@ -108,8 +110,9 @@ class TooltipServoNode(object):
         self.min_vessel_pixels = rospy.get_param('~min_vessel_pixels', 10)
         self.fov_mm = (rospy.get_param('~fov_width_mm', 40.0), rospy.get_param('~fov_depth_mm', 40.0))
         self.image_x_sign = rospy.get_param('~image_x_sign', 1.0)
-        self.max_step_mm = 1000.0 * rospy.get_param('~max_step_m', 0.005)
-        self.max_rotation = np.deg2rad(rospy.get_param('~max_rotation_deg', 10.0))
+        # No limits by default, for simulation; on the real robot set e.g. ~max_step_m:=0.005, ~max_rotation_deg:=10.
+        self.max_step_mm = 1000.0 * rospy.get_param('~max_step_m', np.inf)
+        self.max_rotation = np.deg2rad(rospy.get_param('~max_rotation_deg', np.inf))
         self.probe_step_mm = rospy.get_param('~probe_step_mm', 1.0)
         self.z_step_mm = rospy.get_param('~z_step_mm', 1.0)
         self.dry_run = rospy.get_param('~dry_run', False)
