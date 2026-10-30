@@ -80,6 +80,12 @@ import sys
 import threading
 
 import numpy as np
+
+# ROS Kinetic's rospy still calls the Python 2-era Thread.isAlive() during
+# shutdown; Python 3.9+ renamed it to is_alive().
+if not hasattr(threading.Thread, "isAlive"):
+    threading.Thread.isAlive = threading.Thread.is_alive
+
 import rospy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image
@@ -97,7 +103,7 @@ START_KEYS = ("Return", "KP_Enter")
 def mask_from_msg(msg):
     """sensor_msgs/Image (mono8) -> (H, W) uint8 array, honouring the row stride."""
     if msg.encoding not in ("mono8", "8UC1"):
-        rospy.logwarn_throttle(10.0, "sequential_servo: expected a mono8 mask, got %s", msg.encoding)
+        rospy.logwarn_throttle(10.0, "sequential_servo: expected a mono8 mask, got %s" % msg.encoding)
     return np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.step)[:, :msg.width]
 
 

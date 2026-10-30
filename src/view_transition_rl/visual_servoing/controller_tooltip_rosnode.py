@@ -100,6 +100,12 @@ import threading
 from collections import deque
 
 import numpy as np
+
+# ROS Kinetic's rospy still calls the Python 2-era Thread.isAlive() during
+# shutdown; Python 3.9+ renamed it to is_alive().
+if not hasattr(threading.Thread, "isAlive"):
+    threading.Thread.isAlive = threading.Thread.is_alive
+
 import rospy
 from geometry_msgs.msg import Twist
 from lwr_controllers.msg import PoseRPY
@@ -172,7 +178,7 @@ class TooltipServoNode(object):
         self.dry_run = rospy.get_param('~dry_run', False)
         self.calibration_ns = rospy.get_param('~calibration_ns', '/probe_scan_motion_node')
         self.tooltip_to_probe = tooltip_to_probe_from_calibration(self.calibration_ns)
-        controller_type = rospy.get_param('~controller_type', 'no_increments')
+        controller_type = rospy.get_param('~controller_type', 'sequential')
         controller_kwargs = dict(rospy.get_param('~controller', {}))
         controller_kwargs.setdefault('fov_mm', self.fov_mm)
 
@@ -322,10 +328,10 @@ class TooltipServoNode(object):
         with self._lock:
             pose, pose_time, still_since = self._pose, self._pose_time, self._still_since
         if pose is None or now - pose_time > self.max_pose_age_sec:
-            rospy.logwarn_throttle(10.0, "tooltip_servo: no current pose on %s", self.pose_topic)
+            rospy.logwarn_throttle(10.0, "tooltip_servo: no current pose on %s" % self.pose_topic)
             return None
         if now < self._last_command_time + self.settle_sec or now < still_since + self.still_sec:
-            rospy.loginfo_throttle(5.0, "tooltip_servo: %s: waiting for the probe to come to rest", what)
+            rospy.loginfo_throttle(5.0, "tooltip_servo: %s: waiting for the probe to come to rest" % what)
             return None
         return pose
 
@@ -374,7 +380,7 @@ class TooltipServoNode(object):
             rospy.loginfo_throttle(5.0, "tooltip_servo: waiting for a mask taken after the last move")
             return False
         if pose is None or mask_time - pose_time > self.max_pose_age_sec:
-            rospy.logwarn_throttle(10.0, "tooltip_servo: no current pose on %s with the mask", self.pose_topic)
+            rospy.logwarn_throttle(10.0, "tooltip_servo: no current pose on %s with the mask" % self.pose_topic)
             return False
         if mask_time < still_since + self.still_sec:
             rospy.loginfo_throttle(5.0, "tooltip_servo: waiting for a mask taken with the probe at rest")

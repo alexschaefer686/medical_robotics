@@ -20,7 +20,7 @@
   <!-- Image-to-probe assumptions; calibrate these values on the real system. -->
   <arg name="fov_width_mm" default="40.0"/>
   <arg name="fov_depth_mm" default="40.0"/>
-  <arg name="image_x_sign" default="1.0"/>
+  <arg name="image_x_sign" default="-1.0"/>
 
   <!-- Motion limits and user controls. -->
   <arg name="max_step_m" default="0.005"/>
@@ -30,13 +30,21 @@
   <arg name="show_plot" default="true"/>
   <arg name="dry_run" default="false"/>
 
-  <!-- Controller probe frame expressed in the measured tooltip frame. -->
-  <arg name="tooltip_x_mm" default="0.0"/>
-  <arg name="tooltip_y_mm" default="0.0"/>
-  <arg name="tooltip_z_mm" default="0.0"/>
-  <arg name="tooltip_roll_deg" default="0.0"/>
-  <arg name="tooltip_pitch_deg" default="0.0"/>
-  <arg name="tooltip_yaw_deg" default="0.0"/>
+  <!-- Must match probe_scan_motion_node and the simulated us_probe URDF. -->
+  <arg name="calibration_ns" default="/tooltip_servo_calibration"/>
+  <arg name="probe_y_offset" default="0.00775"/>
+  <arg name="probe_z_rotation_deg" default="7.5"/>
+
+  <!-- Behaviour introduced by the measured-pose controller. -->
+  <arg name="controller_type" default="no_increments"/>
+  <arg name="stop_in_plane" default="true"/>
+  <arg name="plane_steps" default="5"/>
+  <arg name="plane_tol_mm" default="0.5"/>
+  <arg name="plane_tol_deg" default="0.5"/>
+
+  <!-- The node reads calibration from this namespace. -->
+  <param name="$(arg calibration_ns)/probe_y_offset" value="$(arg probe_y_offset)"/>
+  <param name="$(arg calibration_ns)/probe_z_rotation_deg" value="$(arg probe_z_rotation_deg)"/>
 
   <node pkg="medical_robotics"
         type="controller_tooltip_rosnode.py"
@@ -65,15 +73,15 @@
     <param name="z_step_mm" value="$(arg z_step_mm)"/>
     <param name="show_plot" value="$(arg show_plot)"/>
     <param name="dry_run" value="$(arg dry_run)"/>
-
-    <rosparam param="tooltip_to_probe" subst_value="true">
-      xyz_mm: [$(arg tooltip_x_mm), $(arg tooltip_y_mm), $(arg tooltip_z_mm)]
-      rpy_deg: [$(arg tooltip_roll_deg), $(arg tooltip_pitch_deg), $(arg tooltip_yaw_deg)]
-    </rosparam>
+    <param name="calibration_ns" value="$(arg calibration_ns)"/>
+    <param name="controller_type" value="$(arg controller_type)"/>
+    <param name="stop_in_plane" value="$(arg stop_in_plane)"/>
+    <param name="plane_steps" value="$(arg plane_steps)"/>
+    <param name="plane_tol_mm" value="$(arg plane_tol_mm)"/>
+    <param name="plane_tol_deg" value="$(arg plane_tol_deg)"/>
 
     <rosparam param="controller">
-      rotate_deg: 90
-      rotate_steps: 18
+      turn_deg: 90
       align_steps: 5
       track: true
     </rosparam>
