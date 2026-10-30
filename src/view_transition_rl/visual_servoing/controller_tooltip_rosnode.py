@@ -24,10 +24,13 @@ point cloud. Here the probe motion is MEASURED on ~pose_topic instead:
      Twist.angular as ZYX angles (rx, ry, rz) with R = Rz(rz) Ry(ry) Rx(rx), which is how
      probe_scan_motion_node reads it (not as a rotation vector).
 
-~controller_type selects the controller (controllers.py): "no_increments" (default) makes
-its turn about the probe axis as ONE continuous motion of turn_deg (90 by default; set it
-with ~controller, e.g. {turn_deg: 60}) instead of SequentialController's rotate_steps
-separate steps ("sequential"). While that turn runs, steps 1 and 2 are replaced by
+~controller_type selects the controller (controllers.py): "no_increments" makes every
+motion ONE command, never a series of increments or corrections: the levelling, the
+centring (the whole offset at once), the turn about the probe axis (turn_deg, 90 by
+default; set it with ~controller, e.g. {turn_deg: 60}) and the move into the plane; it
+has no tracking. After each move the node logs how far off it ended up, without
+correcting. "sequential" (default) works in steps, e.g. rotate_steps separate turns
+and repeated corrections. While the no_increments turn runs, steps 1 and 2 are replaced by
 streaming: every mask is given to the controller as it arrives, each with the probe pose
 at the mask's header stamp (the time its frame was grabbed; the receipt time if the
 stamp is 0), interpolated from the poses received around it. The turn ends when the
@@ -40,8 +43,9 @@ straight down (pose frame -z), i.e. tooltip roll +-pi (whichever is closer: the 
 orientation, reached by the shortest turn) and pitch 0, yaw kept, within
 ~level_tol_deg. This is closed loop on ~pose_topic, one command (within
 ~max_rotation_deg) per ~command_period_sec once the probe is at rest; if a command does
-not reduce the remaining turn, the node pauses. With ~dry_run the first correction is
-only logged and the controller starts right after.
+not reduce the remaining turn, the node pauses. With no_increments it is one command;
+the controller starts once the probe is at rest after it. With ~dry_run the first
+correction is only logged and the controller starts right after.
 
 With ~stop_in_plane (default), the node takes over once the controller has fitted the
 cylinder and the closest image plane (the start of its align phase): it moves the probe
@@ -49,8 +53,9 @@ straight to the planned probe pose in that plane in ~plane_steps commands, each 
 1 / (commands left) of the remaining motion measured on ~pose_topic (as the controller's
 own align phase does), then single corrections until within ~plane_tol_mm /
 ~plane_tol_deg, and then stops
-(no centre_again or track). If no plane could be fitted it stops right away; if a
-command does not reduce the remaining motion, it pauses.
+(no centre_again or track). With no_increments it is one command for the whole motion
+and no corrections. If no plane could be fitted it stops right away; if a command does
+not reduce the remaining motion, it pauses.
 
 The controller's probe frame (origin = contact point, x = image columns, z = depth)
 must be the frame probe_scan_motion_node executes the Twist commands in. The tooltip
@@ -73,7 +78,7 @@ Parameters (private), in addition to those of controller_rosnode.py:
   ~pose_topic                  measured tooltip pose, lwr_controllers/PoseRPY with position in m and
                                orientation R = Rz(yaw) Ry(pitch) Rx(roll) in rad
                                (/cartesian_position/pose/tooltip)
-  ~controller_type             "no_increments" (default) or "sequential"
+  ~controller_type             "sequential" (default) or "no_increments"
   ~controller                  keyword arguments of that controller, e.g. {turn_deg: 60}
   ~calibration_ns              namespace holding probe_y_offset (m) and probe_z_rotation_deg
                                (/probe_scan_motion_node, where probe_scan_motion.launch loads
@@ -84,7 +89,8 @@ Parameters (private), in addition to those of controller_rosnode.py:
   ~level_tol_deg               remaining turn at which the levelling ends (0.5)
   ~stop_in_plane               move into the fitted plane and stop there (True); False: run the
                                controller's own align, centre_again and track phases
-  ~plane_steps                 commands for the move into the plane (the controller's align_steps, 5)
+  ~plane_steps                 commands for the move into the plane (the controller's align_steps, 5;
+                               always 1 with no_increments)
   ~plane_tol_mm, ~plane_tol_deg  remaining motion at which the probe is in the plane (0.5, 0.5)
   ~max_step_m, ~max_rotation_deg  as in controller_rosnode.py, but no limit by default (for
                                simulation); set them (0.005, 10.0) on the real robot
@@ -184,12 +190,15 @@ class TooltipServoNode(object):
 
         self.controller = CONTROLLER_TYPES[controller_type](**controller_kwargs)
         self.controller.reset()
-        self.plane_steps = rospy.get_param('~plane_steps', self.controller.align_steps)
+        # no_increments: every motion is one command, without corrections.
+        self.single_moves = isinstance(self.controller, NoIncrementsController)
+        self.plane_steps = 1 if self.single_moves else rospy.get_param('~plane_steps', self.controller.align_steps)
         self._turning = False  # a continuous turn is running: masks are streamed to the controller
         self._plot_time = -np.inf
         self.running = False  # the controller only runs after Enter
         self.levelled = False  # the controller only runs after levelling
         self._level_error = None  # tooltip roll error before the last levelling command
+        self._level_moves = 0  # levelling commands sent so far
         self._plane_target = None  # probe pose (mm) in the fitted image plane, with ~stop_in_plane
         self._plane_error = None  # remaining motion into the plane before the last command
         self._plane_moves = 0  # commands sent towards the plane so far
@@ -349,9 +358,9 @@ class TooltipServoNode(object):
         error = np.linalg.norm(turn)
         rospy.loginfo("tooltip_servo: levelling: tooltip roll %+.1f, pitch %+.1f deg; z axis %.1f deg off straight down",
                       np.rad2deg(roll), np.rad2deg(pitch), np.rad2deg(np.arccos(np.clip(-tooltip[2, 2], -1.0, 1.0))))
-        if error <= self.level_tol:
+        if error <= self.level_tol or (self.single_moves and self._level_moves > 0):
             self.levelled = True
-            rospy.loginfo("tooltip_servo: levelled; starting the controller")
+            rospy.loginfo("tooltip_servo: levelled (%.2f deg off); starting the controller", np.rad2deg(error))
             self._update_help()
             return False  # controller step right away
         if self._level_error is not None and error >= self._level_error:
@@ -361,6 +370,7 @@ class TooltipServoNode(object):
             self._update_help()
             return False
         self._level_error = error
+        self._level_moves += 1
         # The command is executed in the probe frame.
         self._publish(np.zeros(3), self.tooltip_to_probe[:3, :3].T @ turn, "level")
         if self.dry_run:
@@ -472,9 +482,10 @@ class TooltipServoNode(object):
         moved_mm, turned = motion_size(remaining)
         error = max(moved_mm / self.plane_tol_mm, turned / self.plane_tol)  # <= 1: within the tolerances
         rospy.loginfo("tooltip_servo: plane: %.2f mm and %.2f deg to go", moved_mm, np.rad2deg(turned))
-        if error <= 1.0:
+        if error <= 1.0 or (self.single_moves and self._plane_moves > 0):
             self.done = True
-            rospy.loginfo("tooltip_servo: in the fitted plane; finished")
+            rospy.loginfo("tooltip_servo: in the fitted plane (%.2f mm, %.2f deg off); finished",
+                          moved_mm, np.rad2deg(turned))
             self._update_help()
             return True
         if self._plane_error is not None and error >= self._plane_error:

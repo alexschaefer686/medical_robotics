@@ -38,8 +38,11 @@
   <arg name="probe_z_rotation_deg" default="7.5"/>
 
   <!-- Behaviour introduced by the measured-pose controller. -->
+  <!-- no_increments: every motion is one command (levelling, centring, turn, into the plane). -->
   <arg name="controller_type" default="no_increments"/>
+  <arg name="turn_deg" default="90"/>
   <arg name="stop_in_plane" default="true"/>
+  <!-- sequential only; no_increments moves into the plane in one command. -->
   <arg name="plane_steps" default="5"/>
   <arg name="plane_tol_mm" default="0.5"/>
   <arg name="plane_tol_deg" default="0.5"/>
@@ -82,10 +85,9 @@
     <param name="plane_tol_mm" value="$(arg plane_tol_mm)"/>
     <param name="plane_tol_deg" value="$(arg plane_tol_deg)"/>
 
-    <rosparam param="controller">
-      turn_deg: 90
-      align_steps: 5
-      track: true
-    </rosparam>
+    <!-- Controller keyword arguments: turn_deg exists only for no_increments (sequential uses its
+         defaults, align_steps 5 and track on). -->
+    <param name="controller/turn_deg" value="$(arg turn_deg)"
+           if="$(eval arg('controller_type') == 'no_increments')"/>
   </node>
 </launch>

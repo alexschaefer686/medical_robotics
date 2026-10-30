@@ -331,16 +331,23 @@ class SequentialController(Controller):
 
 
 class NoIncrementsController(SequentialController):
-    """As SequentialController, but its rotate phase is ONE continuous turn about the probe axis by
-    turn_deg instead of rotate_steps separate steps:
+    """As SequentialController, but every motion is ONE action, never a series of increments:
 
-    2. turn: the first call returns the whole turn as one action, which the caller executes as one
-             motion. While the probe turns, the caller keeps calling the controller with every mask,
-             each after reporting the measured motion since the previous one with apply_motion()
-             (from the probe pose at that mask's time), so every boundary is recorded where it was
-             seen. These calls return a zero action (nothing to send). The phase ends once the
-             measured turn is within turn_tol_deg of turn_deg, or at the next mask after the caller
-             reports with turn_stopped() that the probe came to rest short of it.
+    1. centre:       one move along probe x by the whole offset of the vessel from the image
+                     centre (gain 1), none if already within centre_tol_mm
+    2. turn:         one continuous turn about the probe axis by turn_deg instead of rotate_steps
+                     separate steps. The first call returns the whole turn as one action, which the
+                     caller executes as one motion. While the probe turns, the caller keeps calling
+                     the controller with every mask, each after reporting the measured motion since
+                     the previous one with apply_motion() (from the probe pose at that mask's time),
+                     so every boundary is recorded where it was seen. These calls return a zero
+                     action (nothing to send). The phase ends once the measured turn is within
+                     turn_tol_deg of turn_deg, or at the next mask after the caller reports with
+                     turn_stopped() that the probe came to rest short of it.
+    3. align:        the whole way into the fitted plane in one action
+    4. centre_again: as centre
+    There is no track phase (it corrects a little every step); gain, align_steps, rotate_deg,
+    rotate_steps and track are ignored.
 
     The caller needs the probe pose at each mask's time: with moved() alone the whole turn is
     reported at once and only the masks before and after it are recorded (as in run.py).
@@ -349,7 +356,13 @@ class NoIncrementsController(SequentialController):
     def __init__(self, turn_deg=90.0, turn_tol_deg=1.0, **kwargs):
         self.turn, self.turn_tol = np.deg2rad(turn_deg), np.deg2rad(turn_tol_deg)
         super().__init__(**kwargs)
-        self.PHASES = tuple("turn" if phase == "rotate" else phase for phase in self.PHASES)
+        self.gain, self.align_steps = 1.0, 1  # the whole centring offset and alignment in one action each
+        self.PHASES = ("centre", "turn", "align", "centre_again")
+
+    def _centre(self, measures):
+        return super()._centre(measures) if self.phase_step == 0 else None  # one move only
+
+    _centre_again = _centre
 
     def reset(self):
         super().reset()
