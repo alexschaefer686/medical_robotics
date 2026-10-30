@@ -22,9 +22,11 @@
   <arg name="fov_depth_mm" default="40.0"/>
   <arg name="image_x_sign" default="-1.0"/>
 
-  <!-- Motion limits and user controls. -->
-  <arg name="max_step_m" default="0.005"/>
-  <arg name="max_rotation_deg" default="10.0"/>
+  <!-- Motion limits and user controls. For simulation, no limit below probe_scan_motion_node's own
+       per-command clamps (0.25 m, 2 rad): smaller limits shrink the no_increments turn (90 deg in
+       one command). On the real robot use e.g. max_step_m:=0.005 max_rotation_deg:=10.0. -->
+  <arg name="max_step_m" default="0.25"/>
+  <arg name="max_rotation_deg" default="114.5"/>
   <arg name="probe_step_mm" default="1.0"/>
   <arg name="z_step_mm" default="1.0"/>
   <arg name="show_plot" default="true"/>
