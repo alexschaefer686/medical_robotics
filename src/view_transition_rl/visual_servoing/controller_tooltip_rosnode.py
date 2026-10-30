@@ -30,12 +30,12 @@ centring (the whole offset at once), the turn about the probe axis (turn_deg, 90
 default; set it with ~controller, e.g. {turn_deg: 60}) and the move into the plane; it
 has no tracking. After each move the node logs how far off it ended up, without
 correcting. "sequential" (default) works in steps, e.g. rotate_steps separate turns
-and repeated corrections. While the no_increments turn runs, steps 1 and 2 are replaced by
-streaming: every mask is given to the controller as it arrives, each with the probe pose
-at the mask's header stamp (the time its frame was grabbed; the receipt time if the
-stamp is 0), interpolated from the poses received around it. The turn ends when the
-controller has measured the whole turn, or when the probe is at rest again short of it
-(e.g. clamped by probe_scan_motion_node to 2 rad).
+and repeated corrections. The no_increments turn is driven at constant probe-frame
+angular velocity on ~cruise_topic. During it, steps 1 and 2 are replaced by streaming:
+every mask is given to the controller as it arrives, each with the probe pose at the
+mask's header stamp (the time its frame was grabbed; the receipt time if the stamp is
+0), interpolated from the poses received around it. The velocity is set back to zero
+when the controller has measured the requested turn, or if the probe stops short of it.
 
 When started (first Enter), the node first levels the probe, before the controller
 runs: it turns the probe about its contact point until the tooltip z axis points
@@ -80,6 +80,11 @@ Parameters (private), in addition to those of controller_rosnode.py:
                                (/cartesian_position/pose/tooltip)
   ~controller_type             "sequential" (default) or "no_increments"
   ~controller                  keyword arguments of that controller, e.g. {turn_deg: 60}
+  ~cruise_topic                Twist command used for the no_increments constant-speed turn
+                               (/probe_cruise_velocity)
+  ~turn_speed_deg_s            magnitude of that probe-frame angular Z velocity (10.0)
+  ~turn_command_period_sec     resend period while turning, so a command rejected during the
+                               preceding relative step is accepted once the motion node is idle (0.5)
   ~calibration_ns              namespace holding probe_y_offset (m) and probe_z_rotation_deg
                                (/probe_scan_motion_node, where probe_scan_motion.launch loads
                                probe_calibration.yaml; start that node first)
@@ -162,6 +167,7 @@ class TooltipServoNode(object):
     def __init__(self):
         self.mask_topic = rospy.get_param('~mask_topic', '/vessel_segmentation_node/vessel_mask')
         self.action_topic = rospy.get_param('~action_topic', '/probe_action')
+        self.cruise_topic = rospy.get_param('~cruise_topic', '/probe_cruise_velocity')
         self.pose_topic = rospy.get_param('~pose_topic', '/cartesian_position/pose/tooltip')
         self.command_period_sec = rospy.get_param('~command_period_sec', 4.0)
         self.settle_sec = rospy.get_param('~settle_sec', 3.0)
@@ -182,6 +188,12 @@ class TooltipServoNode(object):
         self.probe_step_mm = rospy.get_param('~probe_step_mm', 1.0)
         self.z_step_mm = rospy.get_param('~z_step_mm', 1.0)
         self.dry_run = rospy.get_param('~dry_run', False)
+        self.turn_speed = np.deg2rad(rospy.get_param('~turn_speed_deg_s', 10.0))
+        if not np.isfinite(self.turn_speed) or self.turn_speed <= 0.0:
+            raise ValueError("~turn_speed_deg_s must be finite and greater than zero")
+        self.turn_command_period_sec = rospy.get_param('~turn_command_period_sec', 0.5)
+        if self.turn_command_period_sec <= 0.0:
+            raise ValueError("~turn_command_period_sec must be greater than zero")
         self.calibration_ns = rospy.get_param('~calibration_ns', '/probe_scan_motion_node')
         self.tooltip_to_probe = tooltip_to_probe_from_calibration(self.calibration_ns)
         controller_type = rospy.get_param('~controller_type', 'sequential')
@@ -194,6 +206,10 @@ class TooltipServoNode(object):
         self.single_moves = isinstance(self.controller, NoIncrementsController)
         self.plane_steps = 1 if self.single_moves else rospy.get_param('~plane_steps', self.controller.align_steps)
         self._turning = False  # a continuous turn is running: masks are streamed to the controller
+        self._turn_stopping = False
+        self._turn_velocity = 0.0
+        self._last_turn_publish_time = -np.inf
+        self._post_turn_action = None
         self._plot_time = -np.inf
         self.running = False  # the controller only runs after Enter
         self.levelled = False  # the controller only runs after levelling
@@ -232,6 +248,8 @@ class TooltipServoNode(object):
         self._masks = deque(maxlen=300)  # (mask msg, stamp) of every mask, consumed during a turn
         self._pose_history = deque(maxlen=5000)  # (time, pose) for the pose at a mask's stamp
         self.action_pub = rospy.Publisher(self.action_topic, Twist, queue_size=1)
+        self.cruise_pub = rospy.Publisher(self.cruise_topic, Twist, queue_size=1)
+        rospy.on_shutdown(self._stop_turn)
         rospy.Subscriber(self.pose_topic, PoseRPY, self._on_pose, queue_size=10)
         rospy.Subscriber(self.mask_topic, Image, self._on_mask, queue_size=1)
 
@@ -312,6 +330,9 @@ class TooltipServoNode(object):
                 self._start_requested = False
                 if not self.done:
                     self.running = not self.running
+                    if self._turning:
+                        velocity = self._turn_velocity if self.running and not self._turn_stopping else 0.0
+                        self._set_turn_velocity(velocity)
                     self._level_error = self._plane_error = None  # the probe may have been moved meanwhile
                     next_command = rospy.get_time()  # first step right away
                     rospy.loginfo("tooltip_servo: controller %s", "started" if self.running else "paused")
@@ -410,6 +431,21 @@ class TooltipServoNode(object):
     def record_turn(self):
         """During a continuous turn: give the controller every new mask, each with the probe pose at its
         stamp. Returns None while the turn runs, then what _use() returns for the controller's next action."""
+        if self._turn_stopping:
+            if self._pose_at_rest("turn stop") is None:
+                return None
+            self._turning = self._turn_stopping = False
+            action, self._post_turn_action = self._post_turn_action, None
+            rospy.loginfo("tooltip_servo: turn stopped; %d frames recorded", len(self.controller.cloud))
+            self._update_help()
+            return self._use(action)
+
+        # probe_scan_motion_node rejects cruise commands while a relative step is
+        # STEPPING/SETTLING. Keep sending the requested velocity until it becomes
+        # idle; this also makes the cruise command robust to a dropped ROS message.
+        if rospy.get_time() >= self._last_turn_publish_time + self.turn_command_period_sec:
+            self._set_turn_velocity(self._turn_velocity, heartbeat=True)
+
         with self._lock:
             masks = list(self._masks)
             self._masks.clear()
@@ -425,16 +461,16 @@ class TooltipServoNode(object):
             self._move_controller_to(pose, quiet=True)
             action = self.controller(mask)
             if self.controller.phase_name != "turn":  # the controller ended the turn and handed over
-                self._turning = False
-                rospy.loginfo("tooltip_servo: turn finished, %d frames recorded", len(self.controller.cloud))
+                self._post_turn_action = action
+                self._turn_stopping = True
+                self._set_turn_velocity(0.0)
+                rospy.loginfo("tooltip_servo: requested turn reached; stopping angular cruise")
                 self._update_plot()
                 self._update_help()
-                return self._use(action)
+                return None
         if rospy.get_time() > self._plot_time + 0.5:
             self._update_plot()
             self._plot_time = rospy.get_time()
-        if self._pose_at_rest("turn") is not None:  # stopped short of the turn: end it at the next mask
-            self.controller.turn_stopped()
         return None
 
     def _mask_array(self, mask_msg):
@@ -444,11 +480,15 @@ class TooltipServoNode(object):
     def _use(self, action):
         """Act on the controller's action; returns False if the next step should follow right away."""
         if self.controller.phase_name == "turn" and not self._turning and action is not None:
-            # The whole turn as one motion; the masks seen while it runs are recorded by record_turn().
+            # Stream a constant probe-frame angular velocity; measured poses determine
+            # when the requested turn has been reached.
             with self._lock:
                 self._masks.clear()
-            self._send(action, "turn")
+            self._turn_velocity = np.copysign(self.turn_speed, action[4])
             self._turning = True
+            self._turn_stopping = False
+            self._post_turn_action = None
+            self._set_turn_velocity(self._turn_velocity)
             self._update_help()
             return True
         if self.stop_in_plane and self.controller.phase_name not in ("centre", "rotate", "turn"):
@@ -471,6 +511,24 @@ class TooltipServoNode(object):
         elif np.any(action):  # a zero action has nothing to send
             self._send(action, self.controller.phase_name)
         return True
+
+    def _set_turn_velocity(self, angular_z, heartbeat=False):
+        """Command probe-frame angular velocity on the motion node's cruise channel."""
+        msg = Twist()
+        msg.angular.z = float(angular_z)
+        if not self.dry_run:
+            self.cruise_pub.publish(msg)
+        now = rospy.get_time()
+        self._last_turn_publish_time = now
+        if not heartbeat:
+            self._last_command_time = now
+            rospy.loginfo("tooltip_servo [turn]: %s angular velocity %.2f deg/s",
+                          "logged" if self.dry_run else "sent", np.rad2deg(angular_z))
+
+    def _stop_turn(self):
+        if getattr(self, '_turning', False) and not self.dry_run:
+            msg = Twist()
+            self.cruise_pub.publish(msg)
 
     def move_to_plane(self):
         """After the fit (~stop_in_plane): one command moving the probe towards the planned pose in the

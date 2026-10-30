@@ -6,6 +6,7 @@
   <arg name="mask_topic" default="/vessel_segmentation_node/vessel_mask"/>
   <arg name="pose_topic" default="/cartesian_position/pose/tooltip"/>
   <arg name="action_topic" default="/probe_action"/>
+  <arg name="cruise_topic" default="/probe_cruise_velocity"/>
 
   <!-- Command timing and measured-pose validity. -->
   <arg name="command_period_sec" default="4.0"/>
@@ -23,8 +24,9 @@
   <arg name="image_x_sign" default="-1.0"/>
 
   <!-- Motion limits and user controls. For simulation, no limit below probe_scan_motion_node's own
-       per-command clamps (0.25 m, 2 rad): smaller limits shrink the no_increments turn (90 deg in
-       one command). On the real robot use e.g. max_step_m:=0.005 max_rotation_deg:=10.0. -->
+       per-command clamps (0.25 m, 2 rad). The no_increments turn uses turn_speed_deg_s instead;
+       these limits still apply to levelling, centring and the fitted-plane move. On the real robot
+       use e.g. max_step_m:=0.005 max_rotation_deg:=10.0. -->
   <arg name="max_step_m" default="0.25"/>
   <arg name="max_rotation_deg" default="114.5"/>
   <arg name="probe_step_mm" default="1.0"/>
@@ -32,28 +34,30 @@
   <arg name="show_plot" default="true"/>
   <arg name="dry_run" default="false"/>
 
-  <!-- Must match probe_scan_motion_node and the simulated us_probe URDF. -->
-  <arg name="calibration_ns" default="/tooltip_servo_calibration"/>
-  <arg name="probe_y_offset" default="0.00775"/>
-  <arg name="probe_z_rotation_deg" default="7.5"/>
+  <!-- Read the same calibration that probe_scan_motion_node uses for EE <-> probe motion.
+       probe_scan_motion.launch loads probe_calibration.yaml under this namespace. -->
+  <arg name="calibration_ns" default="/probe_scan_motion_node"/>
 
   <!-- Behaviour introduced by the measured-pose controller. -->
-  <!-- no_increments: every motion is one command (levelling, centring, turn, into the plane). -->
+  <!-- no_increments: levelling, centring and the fitted-plane move each use one command; the turn
+       uses one continuous angular-velocity command followed by zero at the measured target angle. -->
   <arg name="controller_type" default="no_increments"/>
   <arg name="turn_deg" default="90"/>
+  <arg name="turn_speed_deg_s" default="10.0"/>
+  <arg name="turn_command_period_sec" default="0.5"/>
+  <arg name="rotate_deg" default="90"/>
+  <arg name="rotate_steps" default="18"/>
+  <arg name="align_steps" default="5"/>
   <arg name="stop_in_plane" default="true"/>
   <!-- sequential only; no_increments moves into the plane in one command. -->
   <arg name="plane_steps" default="5"/>
   <arg name="plane_tol_mm" default="0.5"/>
   <arg name="plane_tol_deg" default="0.5"/>
 
-  <!-- The node reads calibration from this namespace. -->
-  <param name="$(arg calibration_ns)/probe_y_offset" value="$(arg probe_y_offset)"/>
-  <param name="$(arg calibration_ns)/probe_z_rotation_deg" value="$(arg probe_z_rotation_deg)"/>
-
   <node pkg="medical_robotics"
         type="controller_tooltip_rosnode.py"
         name="tooltip_servo_node"
+        clear_params="true"
         launch-prefix="$(arg python_executable)"
         output="screen">
     <env name="PYTHONPATH" value="$(find medical_robotics)/src:$(optenv PYTHONPATH)"/>
@@ -61,6 +65,7 @@
     <param name="mask_topic" value="$(arg mask_topic)"/>
     <param name="pose_topic" value="$(arg pose_topic)"/>
     <param name="action_topic" value="$(arg action_topic)"/>
+    <param name="cruise_topic" value="$(arg cruise_topic)"/>
     <param name="command_period_sec" value="$(arg command_period_sec)"/>
     <param name="settle_sec" value="$(arg settle_sec)"/>
     <param name="max_pose_age_sec" value="$(arg max_pose_age_sec)"/>
@@ -80,14 +85,21 @@
     <param name="dry_run" value="$(arg dry_run)"/>
     <param name="calibration_ns" value="$(arg calibration_ns)"/>
     <param name="controller_type" value="$(arg controller_type)"/>
+    <param name="turn_speed_deg_s" value="$(arg turn_speed_deg_s)"/>
+    <param name="turn_command_period_sec" value="$(arg turn_command_period_sec)"/>
     <param name="stop_in_plane" value="$(arg stop_in_plane)"/>
     <param name="plane_steps" value="$(arg plane_steps)"/>
     <param name="plane_tol_mm" value="$(arg plane_tol_mm)"/>
     <param name="plane_tol_deg" value="$(arg plane_tol_deg)"/>
 
-    <!-- Controller keyword arguments: turn_deg exists only for no_increments (sequential uses its
-         defaults, align_steps 5 and track on). -->
+    <!-- Each controller receives only the keyword arguments it supports. -->
     <param name="controller/turn_deg" value="$(arg turn_deg)"
            if="$(eval arg('controller_type') == 'no_increments')"/>
+    <param name="controller/rotate_deg" value="$(arg rotate_deg)"
+           if="$(eval arg('controller_type') == 'sequential')"/>
+    <param name="controller/rotate_steps" value="$(arg rotate_steps)"
+           if="$(eval arg('controller_type') == 'sequential')"/>
+    <param name="controller/align_steps" value="$(arg align_steps)"/>
+    <param name="controller/track" value="true"/>
   </node>
 </launch>
