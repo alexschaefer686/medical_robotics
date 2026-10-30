@@ -17,9 +17,12 @@ point cloud. Here the probe motion is MEASURED on ~pose_topic instead:
      step, inv(pose_last) @ pose_now (probe frame before the move), through
      controller.apply_motion(): its point cloud, fits, alignment target and skin
      normal move into the probe frame the mask was taken in.
-  3. Motions (controller and keys) are published as before but not reported to the
-     controller; the measured pose at its next step accounts for whatever the robot
-     actually did.
+  3. Motions (controller and keys) are published but not reported to the controller;
+     the measured pose at its next step accounts for whatever the robot actually did.
+     Controller actions are sent as the motion the controller assumes (contact_motion,
+     including the slide along the new probe axis back onto the skin), and
+     Twist.angular as ZYX angles (rx, ry, rz) with R = Rz(rz) Ry(ry) Rx(rx), which is how
+     probe_scan_motion_node reads it (not as a rotation vector).
 
 When started (first Enter), the node first levels the probe, before the controller
 runs: it turns the probe about its contact point until the tooltip z axis points
@@ -30,12 +33,21 @@ orientation, reached by the shortest turn) and pitch 0, yaw kept, within
 not reduce the remaining turn, the node pauses. With ~dry_run the first correction is
 only logged and the controller starts right after.
 
-The controller's probe frame (origin = contact point, x = image columns, z = depth,
-which is also the frame probe_scan_motion_node executes the Twist commands in) is the
-tooltip frame composed with ~tooltip_to_probe, identity by default. Set it if the
-tooltip frame differs from that frame, e.g. by the z rotation and y offset of
-ultrasound_probe_toolkit's probe_calibration.yaml: a 7.75 mm offset alone puts
-frames taken 180 degrees apart about the probe axis up to 15.5 mm off.
+With ~stop_in_plane (default), the node takes over once the controller has fitted the
+cylinder and the closest image plane (the start of its align phase): it moves the probe
+straight to the planned probe pose in that plane, as one relative motion, repeated
+closed loop on ~pose_topic until within ~plane_tol_mm / ~plane_tol_deg, and then stops
+(no centre_again or track). If no plane could be fitted it stops right away; if a
+command does not reduce the remaining motion, it pauses.
+
+The controller's probe frame (origin = contact point, x = image columns, z = depth)
+must be the frame probe_scan_motion_node executes the Twist commands in. The tooltip
+pose only adds probe_length along the flange z axis, so the node composes it with the
+rest of that node's calibration, Rot_z(probe_z_rotation_deg) * Trans_y(probe_y_offset)
+(ultrasound_probe_toolkit's config/probe_calibration.yaml, plus any launch overrides),
+read from the parameter server under ~calibration_ns; nothing is hardcoded, and the
+node does not start without it. A 7.75 mm offset alone puts frames taken 180 degrees
+apart about the probe axis up to 15.5 mm off.
 
 The controller's skin normal (its "roll = 0") is the probe axis at its first step,
 right after levelling, so the skin under the probe should be about horizontal. Body
@@ -49,14 +61,20 @@ Parameters (private), in addition to those of controller_rosnode.py:
   ~pose_topic                  measured tooltip pose, lwr_controllers/PoseRPY with position in m and
                                orientation R = Rz(yaw) Ry(pitch) Rx(roll) in rad
                                (/cartesian_position/pose/tooltip)
-  ~tooltip_to_probe            the controller's probe frame in the tooltip frame,
-                               {xyz_mm: [x, y, z], rpy_deg: [roll, pitch, yaw]} (identity)
+  ~calibration_ns              namespace holding probe_y_offset (m) and probe_z_rotation_deg
+                               (/probe_scan_motion_node, where probe_scan_motion.launch loads
+                               probe_calibration.yaml; start that node first)
   ~max_pose_age_sec            maximum age of the pose stored with a mask (0.5)
   ~still_sec                   how long the probe must have been at rest before a mask (0.5)
   ~still_mm, ~still_deg        motion that still counts as at rest (0.2, 0.2)
   ~level_tol_deg               remaining turn at which the levelling ends (0.5)
+  ~stop_in_plane               move into the fitted plane and stop there (True); False: run the
+                               controller's own align, centre_again and track phases
+  ~plane_tol_mm, ~plane_tol_deg  remaining motion at which the probe is in the plane (0.5, 0.5)
   ~max_step_m, ~max_rotation_deg  as in controller_rosnode.py, but no limit by default (for
                                simulation); set them (0.005, 10.0) on the real robot
+  ~image_x_sign                as in controller_rosnode.py, but -1 by default (the simulation
+                               mirrors the image)
 
 Requires lwr_controllers (for PoseRPY) in addition to the requirements of controller_rosnode.py.
 """
@@ -72,7 +90,8 @@ from sensor_msgs.msg import Image
 
 from view_transition_rl.simulation.geometry import euler_from_pose, rotation_xyz
 from view_transition_rl.visual_servoing.controller_rosnode import DEPTH_KEYS, PROBE_KEYS, START_KEYS, mask_from_msg
-from view_transition_rl.visual_servoing.controllers import SequentialController, relative_motion, rotation_vector
+from view_transition_rl.visual_servoing.controllers import (SequentialController, contact_motion, rotation_matrix,
+                                                            rotation_vector)
 
 
 def pose_matrix(xyz_mm, roll, pitch, yaw):
@@ -88,6 +107,19 @@ def pose_from_msg(msg):
     position, orientation = msg.position, msg.orientation
     return pose_matrix(1000.0 * np.array([position.x, position.y, position.z]),
                        orientation.roll, orientation.pitch, orientation.yaw)
+
+
+def tooltip_to_probe_from_calibration(ns):
+    """Probe frame in the tooltip frame from ultrasound_probe_toolkit's calibration parameters under ns:
+    Rot_z(probe_z_rotation_deg) * Trans_y(probe_y_offset), i.e. its T_E_P without probe_length, which
+    the tooltip pose already includes."""
+    try:
+        y_offset_mm = 1000.0 * rospy.get_param(ns + '/probe_y_offset')
+        z_rotation = np.deg2rad(rospy.get_param(ns + '/probe_z_rotation_deg'))
+    except KeyError as missing:
+        raise RuntimeError(f"tooltip_servo: no probe calibration parameter {missing} under {ns}; start "
+                           f"probe_scan_motion_node (probe_calibration.yaml) first or set ~calibration_ns") from None
+    return pose_matrix([0.0, 0.0, 0.0], 0.0, 0.0, z_rotation) @ pose_matrix([0.0, y_offset_mm, 0.0], 0.0, 0.0, 0.0)
 
 
 def motion_size(delta):
@@ -107,18 +139,20 @@ class TooltipServoNode(object):
         self.still_mm = rospy.get_param('~still_mm', 0.2)
         self.still_rad = np.deg2rad(rospy.get_param('~still_deg', 0.2))
         self.level_tol = np.deg2rad(rospy.get_param('~level_tol_deg', 0.5))
+        self.stop_in_plane = rospy.get_param('~stop_in_plane', True)
+        self.plane_tol_mm = rospy.get_param('~plane_tol_mm', 0.5)
+        self.plane_tol = np.deg2rad(rospy.get_param('~plane_tol_deg', 0.5))
         self.min_vessel_pixels = rospy.get_param('~min_vessel_pixels', 10)
         self.fov_mm = (rospy.get_param('~fov_width_mm', 40.0), rospy.get_param('~fov_depth_mm', 40.0))
-        self.image_x_sign = rospy.get_param('~image_x_sign', 1.0)
+        self.image_x_sign = rospy.get_param('~image_x_sign', -1.0)
         # No limits by default, for simulation; on the real robot set e.g. ~max_step_m:=0.005, ~max_rotation_deg:=10.
         self.max_step_mm = 1000.0 * rospy.get_param('~max_step_m', np.inf)
         self.max_rotation = np.deg2rad(rospy.get_param('~max_rotation_deg', np.inf))
         self.probe_step_mm = rospy.get_param('~probe_step_mm', 1.0)
         self.z_step_mm = rospy.get_param('~z_step_mm', 1.0)
         self.dry_run = rospy.get_param('~dry_run', False)
-        offset = dict(rospy.get_param('~tooltip_to_probe', {}))
-        self.tooltip_to_probe = pose_matrix(offset.get('xyz_mm', [0.0, 0.0, 0.0]),
-                                            *np.deg2rad(offset.get('rpy_deg', [0.0, 0.0, 0.0])))
+        self.calibration_ns = rospy.get_param('~calibration_ns', '/probe_scan_motion_node')
+        self.tooltip_to_probe = tooltip_to_probe_from_calibration(self.calibration_ns)
         controller_kwargs = dict(rospy.get_param('~controller', {}))
         controller_kwargs.setdefault('fov_mm', self.fov_mm)
 
@@ -127,6 +161,8 @@ class TooltipServoNode(object):
         self.running = False  # the controller only runs after Enter
         self.levelled = False  # the controller only runs after levelling
         self._level_error = None  # tooltip roll error before the last levelling command
+        self._plane_target = None  # probe pose (mm) in the fitted image plane, with ~stop_in_plane
+        self._plane_error = None  # remaining motion into the plane before the last command
         self.done = False
         self._start_requested = False
         self._last_command_time = -np.inf
@@ -195,8 +231,10 @@ class TooltipServoNode(object):
     def _update_help(self):
         if self.view is None:
             return
-        state = ("FINISHED" if self.done else "LEVELLING - Enter: pause" if self.running and not self.levelled
-                 else "RUNNING - Enter: pause" if self.running else "PAUSED - Enter: start the controller")
+        state = ("FINISHED" if self.done else "PAUSED - Enter: start the controller" if not self.running
+                 else "LEVELLING - Enter: pause" if not self.levelled
+                 else "MOVING INTO THE FITTED PLANE - Enter: pause" if self._plane_target is not None
+                 else "RUNNING - Enter: pause")
         self.view.set_help(f"{state}\n"
                            f"W/A/S/D: move probe {self.probe_step_mm:g} mm along its own y (W/S) and x (A/D)\n"
                            f"R/F: lift / press probe {self.z_step_mm:g} mm along its axis")
@@ -212,30 +250,39 @@ class TooltipServoNode(object):
                 self._start_requested = False
                 if not self.done:
                     self.running = not self.running
-                    self._level_error = None  # the probe may have been moved meanwhile
+                    self._level_error = self._plane_error = None  # the probe may have been moved meanwhile
                     next_command = rospy.get_time()  # first step right away
                     rospy.loginfo("tooltip_servo: controller %s", "started" if self.running else "paused")
                     self._update_help()
             if self.running and not self.done and rospy.get_time() >= next_command:
                 # Retry soon if there was no usable mask or pose yet, otherwise wait a full period.
-                stepped = self.step() if self.levelled else self.level()
+                stepped = (self.level() if not self.levelled else
+                           self.move_to_plane() if self._plane_target is not None else self.step())
                 next_command = rospy.get_time() + (self.command_period_sec if stepped else 0.2)
             if self.view is not None and self.view.is_open:
                 self._draw_probe()
                 self.view.process_events()
             rate.sleep()
 
-    def level(self):
-        """First step: one command turning the probe towards tooltip roll +-pi and pitch 0 (z axis
-        straight down), yaw kept; returns False if it sent nothing (waiting, or levelled)."""
+    def _pose_at_rest(self, what):
+        """Latest pose, or None (logged) while it is not current or the probe is not yet at rest
+        after the last command."""
         now = rospy.get_time()
         with self._lock:
             pose, pose_time, still_since = self._pose, self._pose_time, self._still_since
         if pose is None or now - pose_time > self.max_pose_age_sec:
             rospy.logwarn_throttle(10.0, "tooltip_servo: no current pose on %s", self.pose_topic)
-            return False
+            return None
         if now < self._last_command_time + self.settle_sec or now < still_since + self.still_sec:
-            rospy.loginfo_throttle(5.0, "tooltip_servo: levelling: waiting for the probe to come to rest")
+            rospy.loginfo_throttle(5.0, "tooltip_servo: %s: waiting for the probe to come to rest", what)
+            return None
+        return pose
+
+    def level(self):
+        """First step: one command turning the probe towards tooltip roll +-pi and pitch 0 (z axis
+        straight down), yaw kept; returns False if it sent nothing (waiting, or levelled)."""
+        pose = self._pose_at_rest("levelling")
+        if pose is None:
             return False
         tooltip = pose @ np.linalg.inv(self.tooltip_to_probe)
         roll, pitch, yaw = euler_from_pose(tooltip)
@@ -253,7 +300,7 @@ class TooltipServoNode(object):
         if self._level_error is not None and error >= self._level_error:
             self.running, self._level_error = False, None
             rospy.logerr("tooltip_servo: levelling: remaining turn %.1f deg did not shrink after the last command; "
-                         "paused (check ~pose_topic and ~tooltip_to_probe), Enter to retry", np.rad2deg(error))
+                         "paused (check ~pose_topic and the probe calibration), Enter to retry", np.rad2deg(error))
             self._update_help()
             return False
         self._level_error = error
@@ -293,12 +340,52 @@ class TooltipServoNode(object):
         self._move_controller_to(pose)
         action = self.controller(mask)
         self._update_plot()
+        if self.stop_in_plane and self.controller.phase_name not in ("centre", "rotate"):
+            # The controller has just fitted the cylinder and planned its alignment (or failed to):
+            # move straight into the fitted plane instead of its align, centre_again and track phases.
+            if self.controller.align_target is None:
+                self.done = True
+                rospy.logwarn("tooltip_servo: no fitted plane to move into (see the controller's align output); "
+                              "stopping")
+            else:
+                self._plane_target = self._frame_pose @ self.controller.align_target
+                rospy.loginfo("tooltip_servo: plane fitted; moving into it")
+            self._update_help()
+            return False  # first move right away
         if action is None:
             self.done = True
             rospy.loginfo("tooltip_servo: sequence finished")
             self._update_help()
         else:
             self._send(action, self.controller.phase_name)
+        return True
+
+    def move_to_plane(self):
+        """After the fit (~stop_in_plane): one command moving the probe straight to the planned pose in
+        the fitted image plane, closed loop on the measured pose; returns False if it sent nothing."""
+        pose = self._pose_at_rest("moving into the plane")
+        if pose is None:
+            return False
+        remaining = np.linalg.inv(pose) @ self._plane_target  # probe frame
+        moved_mm, turned = motion_size(remaining)
+        error = max(moved_mm / self.plane_tol_mm, turned / self.plane_tol)  # <= 1: within the tolerances
+        rospy.loginfo("tooltip_servo: plane: %.2f mm and %.2f deg to go", moved_mm, np.rad2deg(turned))
+        if error <= 1.0:
+            self.done = True
+            rospy.loginfo("tooltip_servo: in the fitted plane; finished")
+            self._update_help()
+            return True
+        if self._plane_error is not None and error >= self._plane_error:
+            self.running, self._plane_error = False, None
+            rospy.logerr("tooltip_servo: moving into the plane: no progress after the last command; paused "
+                         "(check ~pose_topic and the probe calibration), Enter to retry")
+            self._update_help()
+            return False
+        self._plane_error = error
+        self._publish(remaining[:3, 3], rotation_vector(remaining[:3, :3]), "plane")
+        if self.dry_run:
+            self.done = True  # the probe does not move
+            self._update_help()
         return True
 
     def _move_controller_to(self, pose):
@@ -328,27 +415,30 @@ class TooltipServoNode(object):
             self._publish(np.array([0.0, 0.0, direction * self.z_step_mm]), np.zeros(3), "user")
 
     def _send(self, action, source):
-        """Publish a controller-style action (within the limits). Not reported to the controller:
-        the measured pose at its next step accounts for it."""
-        translation = np.array([action[0], action[1], 0.0])  # mm, probe frame
-        self._publish(translation, rotation_vector(relative_motion(action)[:3, :3]), source)
+        """Publish a controller-style action as the motion the controller assumes (with the slide back
+        onto the skin), within the limits. Not reported to the controller: the measured pose at its
+        next step accounts for it."""
+        delta = contact_motion(action, self.controller.surface_normal)  # probe frame, mm
+        self._publish(delta[:3, 3], rotation_vector(delta[:3, :3]), source)
 
     def _publish(self, translation, rotation, source):
         """Publish one relative probe-frame motion (translation in mm, rotation vector in rad),
-        scaled down to the limits; returns what was sent."""
+        scaled down to the limits; returns what was sent. Twist.angular gets ZYX angles (rx, ry, rz),
+        R = Rz(rz) @ Ry(ry) @ Rx(rx), as probe_scan_motion_node reads them."""
         scale = min(1.0, self.max_step_mm / max(np.linalg.norm(translation), 1e-12),
                     self.max_rotation / max(np.linalg.norm(rotation), 1e-12))
         translation, rotation = scale * translation, scale * rotation
+        angles = euler_from_pose(rotation_matrix(rotation))  # (rx, ry, rz)
         twist = Twist()
         twist.linear.x, twist.linear.y, twist.linear.z = (translation / 1000.0).tolist()
-        twist.angular.x, twist.angular.y, twist.angular.z = rotation.tolist()
+        twist.angular.x, twist.angular.y, twist.angular.z = angles.tolist()
         if not self.dry_run:
             self.action_pub.publish(twist)
         self._last_command_time = rospy.get_time()
         rospy.loginfo(
-            "tooltip_servo [%s]: %s linear (%.2f, %.2f, %.2f) mm, angular (%.2f, %.2f, %.2f) deg%s",
+            "tooltip_servo [%s]: %s linear (%.2f, %.2f, %.2f) mm, angular ZYX (%.2f, %.2f, %.2f) deg%s",
             source, "logged" if self.dry_run else "sent", *translation,
-            *np.rad2deg(rotation), "" if scale == 1.0 else f" (scaled to {scale:.2f} by the limits)"
+            *np.rad2deg(angles), "" if scale == 1.0 else f" (scaled to {scale:.2f} by the limits)"
         )
         return translation, rotation
 
