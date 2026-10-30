@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>medical_robotics</name>
+  <version>0.1.0</version>
+  <description>ROS integration for the view-transition visual-servoing controller.</description>
+
+  <maintainer email="u4267050275@gmail.com">wu</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>lwr_controllers</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+  <export/>
+</package>

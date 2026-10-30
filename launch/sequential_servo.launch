@@ -1,0 +1,53 @@
+<launch>
+  <!-- Input/output topics. -->
+  <arg name="mask_topic" default="/vessel_segmentation_node/vessel_mask"/>
+  <arg name="action_topic" default="/probe_action"/>
+
+  <!-- Timing must remain slower than the probe motion node's step duration. -->
+  <arg name="command_period_sec" default="4.0"/>
+  <arg name="settle_sec" default="3.0"/>
+  <arg name="min_vessel_pixels" default="10"/>
+
+  <!-- Image-to-probe assumptions; calibrate these values on the real system. -->
+  <arg name="fov_width_mm" default="40.0"/>
+  <arg name="fov_depth_mm" default="40.0"/>
+  <arg name="image_x_sign" default="-1.0"/>
+
+  <!-- Conservative motion limits for initial testing. -->
+  <arg name="max_step_m" default="0.005"/>
+  <arg name="max_rotation_deg" default="10.0"/>
+  <arg name="probe_step_mm" default="1.0"/>
+  <arg name="z_step_mm" default="0.5"/>
+  <arg name="show_plot" default="true"/>
+  <arg name="dry_run" default="false"/>
+
+  <node pkg="medical_robotics"
+        type="controller_rosnode.py"
+        name="sequential_servo_node"
+        output="screen">
+    <!-- Make the repository's src-layout Python package importable. -->
+    <env name="PYTHONPATH" value="$(find medical_robotics)/src:$(optenv PYTHONPATH)"/>
+
+    <param name="mask_topic" value="$(arg mask_topic)"/>
+    <param name="action_topic" value="$(arg action_topic)"/>
+    <param name="command_period_sec" value="$(arg command_period_sec)"/>
+    <param name="settle_sec" value="$(arg settle_sec)"/>
+    <param name="min_vessel_pixels" value="$(arg min_vessel_pixels)"/>
+    <param name="fov_width_mm" value="$(arg fov_width_mm)"/>
+    <param name="fov_depth_mm" value="$(arg fov_depth_mm)"/>
+    <param name="image_x_sign" value="$(arg image_x_sign)"/>
+    <param name="max_step_m" value="$(arg max_step_m)"/>
+    <param name="max_rotation_deg" value="$(arg max_rotation_deg)"/>
+    <param name="probe_step_mm" value="$(arg probe_step_mm)"/>
+    <param name="z_step_mm" value="$(arg z_step_mm)"/>
+    <param name="show_plot" value="$(arg show_plot)"/>
+    <param name="dry_run" value="$(arg dry_run)"/>
+
+    <rosparam param="controller">
+      rotate_deg: 90
+      rotate_steps: 18
+      align_steps: 5
+      track: true
+    </rosparam>
+  </node>
+</launch>

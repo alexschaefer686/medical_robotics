@@ -1,0 +1,36 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/wu/Documents/project/ROS/kuka_ws/devel/include/**",
+        "/opt/ros/kinetic/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/cartesian_position_node/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/dqn_longitudinal_robot_deployment/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/frame_grabber/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/kuka/kuka_controllers/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/kuka/kuka_impedance_controller/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/kuka/kuka_stiffness_estimation/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/kuka/kuka_teleop/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/kuka/kuka_trajectories/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/kuka-lwr/lwr_controllers/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/kuka-lwr/lwr_hw/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/sriforcesensor/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_probe_impedance/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_probe_motion/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_probe_reconstruction/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_probe_toolkit/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_reconstruction/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_trajectory/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_vessel_active_contour/include/**",
+        "/home/wu/Documents/project/ROS/kuka_ws/src/ultrasound_vessel_reconstruction/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
