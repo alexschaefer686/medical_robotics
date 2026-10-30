@@ -109,9 +109,9 @@ class SequentialServoNode(object):
         self.settle_sec = rospy.get_param('~settle_sec', 3.0)
         self.min_vessel_pixels = rospy.get_param('~min_vessel_pixels', 10)
         self.fov_mm = (rospy.get_param('~fov_width_mm', 40.0), rospy.get_param('~fov_depth_mm', 40.0))
-        self.image_x_sign = rospy.get_param('~image_x_sign', 1.0)
-        self.max_step_mm = 1000.0 * rospy.get_param('~max_step_m', 0.005)
-        self.max_rotation = np.deg2rad(rospy.get_param('~max_rotation_deg', 10.0))
+        self.image_x_sign = rospy.get_param('~image_x_sign', -1.0)
+        self.max_step_mm = 1000.0 * rospy.get_param('~max_step_m', 0.5)
+        self.max_rotation = np.deg2rad(rospy.get_param('~max_rotation_deg', 100.0))
         self.probe_step_mm = rospy.get_param('~probe_step_mm', 1.0)
         self.z_step_mm = rospy.get_param('~z_step_mm', 1.0)
         self.dry_run = rospy.get_param('~dry_run', False)
@@ -283,7 +283,10 @@ class SequentialServoNode(object):
 
 def main():
     rospy.init_node('sequential_servo_node')
-    SequentialServoNode().spin()
+    try:
+        SequentialServoNode().spin()
+    except rospy.ROSInterruptException:
+        pass
 
 
 if __name__ == '__main__':
