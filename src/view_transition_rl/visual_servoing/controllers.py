@@ -330,6 +330,52 @@ class SequentialController(Controller):
         return action_for_motion(np.zeros(3), turn, self.surface_normal)  # turn about the contact point
 
 
+class NoIncrementsController(SequentialController):
+    """As SequentialController, but its rotate phase is ONE continuous turn about the probe axis by
+    turn_deg instead of rotate_steps separate steps:
+
+    2. turn: the first call returns the whole turn as one action, which the caller executes as one
+             motion. While the probe turns, the caller keeps calling the controller with every mask,
+             each after reporting the measured motion since the previous one with apply_motion()
+             (from the probe pose at that mask's time), so every boundary is recorded where it was
+             seen. These calls return a zero action (nothing to send). The phase ends once the
+             measured turn is within turn_tol_deg of turn_deg, or at the next mask after the caller
+             reports with turn_stopped() that the probe came to rest short of it.
+
+    The caller needs the probe pose at each mask's time: with moved() alone the whole turn is
+    reported at once and only the masks before and after it are recorded (as in run.py).
+    """
+
+    def __init__(self, turn_deg=90.0, turn_tol_deg=1.0, **kwargs):
+        self.turn, self.turn_tol = np.deg2rad(turn_deg), np.deg2rad(turn_tol_deg)
+        super().__init__(**kwargs)
+        self.PHASES = tuple("turn" if phase == "rotate" else phase for phase in self.PHASES)
+
+    def reset(self):
+        super().reset()
+        self.turned, self.turn_over = 0.0, False
+
+    def apply_motion(self, delta):
+        """As SequentialController.apply_motion(); during the turn also adds up the rotation about the probe axis."""
+        if self.phase_name == "turn" and self.phase_step > 0:
+            self.turned += rotation_vector(np.asarray(delta, dtype=float)[:3, :3])[2]
+        return super().apply_motion(delta)
+
+    def turn_stopped(self):
+        """Report that the probe came to rest during the turn; the next call ends it."""
+        self.turn_over = True
+
+    def _turn(self, measures):
+        if self.phase_step == 0:
+            self.turned, self.turn_over = 0.0, False
+            return [0.0, 0.0, 0.0, 0.0, self.turn]
+        if self.turn_over or abs(self.turned) >= abs(self.turn) - self.turn_tol:
+            print(f"turn: {np.rad2deg(self.turned):.1f} of {np.rad2deg(self.turn):.1f} deg, "
+                  f"{len(self.cloud)} frames recorded")
+            return None
+        return [0.0, 0.0, 0.0, 0.0, 0.0]  # still turning: only record
+
+
 class YawSweepController(Controller):
     """Example: rotate about the probe axis until the mask looks longitudinal.
 
@@ -354,4 +400,4 @@ class YawSweepController(Controller):
         return [0.0, 0.0, 0.0, 0.0, self.direction * self.step]
 
 
-CONTROLLERS = {"mine": MyController, "sequential": SequentialController}
+CONTROLLERS = {"mine": MyController, "sequential": SequentialController, "no_increments": NoIncrementsController}

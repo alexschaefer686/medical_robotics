@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the SequentialController on the real robot over ROS1, reconstructing from the measured tooltip pose.
+"""Run a sequential controller on the real robot over ROS1, reconstructing from the measured tooltip pose.
 
 Same loop, keys and parameters as controller_rosnode.py (read its docstring first),
 except for how the reconstruction follows the probe. controller_rosnode.py reports
@@ -24,6 +24,16 @@ point cloud. Here the probe motion is MEASURED on ~pose_topic instead:
      Twist.angular as ZYX angles (rx, ry, rz) with R = Rz(rz) Ry(ry) Rx(rx), which is how
      probe_scan_motion_node reads it (not as a rotation vector).
 
+~controller_type selects the controller (controllers.py): "no_increments" (default) makes
+its turn about the probe axis as ONE continuous motion of turn_deg (90 by default; set it
+with ~controller, e.g. {turn_deg: 60}) instead of SequentialController's rotate_steps
+separate steps ("sequential"). While that turn runs, steps 1 and 2 are replaced by
+streaming: every mask is given to the controller as it arrives, each with the probe pose
+at the mask's header stamp (the time its frame was grabbed; the receipt time if the
+stamp is 0), interpolated from the poses received around it. The turn ends when the
+controller has measured the whole turn, or when the probe is at rest again short of it
+(e.g. clamped by probe_scan_motion_node to 2 rad).
+
 When started (first Enter), the node first levels the probe, before the controller
 runs: it turns the probe about its contact point until the tooltip z axis points
 straight down (pose frame -z), i.e. tooltip roll +-pi (whichever is closer: the same
@@ -35,8 +45,10 @@ only logged and the controller starts right after.
 
 With ~stop_in_plane (default), the node takes over once the controller has fitted the
 cylinder and the closest image plane (the start of its align phase): it moves the probe
-straight to the planned probe pose in that plane, as one relative motion, repeated
-closed loop on ~pose_topic until within ~plane_tol_mm / ~plane_tol_deg, and then stops
+straight to the planned probe pose in that plane in ~plane_steps commands, each covering
+1 / (commands left) of the remaining motion measured on ~pose_topic (as the controller's
+own align phase does), then single corrections until within ~plane_tol_mm /
+~plane_tol_deg, and then stops
 (no centre_again or track). If no plane could be fitted it stops right away; if a
 command does not reduce the remaining motion, it pauses.
 
@@ -61,6 +73,8 @@ Parameters (private), in addition to those of controller_rosnode.py:
   ~pose_topic                  measured tooltip pose, lwr_controllers/PoseRPY with position in m and
                                orientation R = Rz(yaw) Ry(pitch) Rx(roll) in rad
                                (/cartesian_position/pose/tooltip)
+  ~controller_type             "no_increments" (default) or "sequential"
+  ~controller                  keyword arguments of that controller, e.g. {turn_deg: 60}
   ~calibration_ns              namespace holding probe_y_offset (m) and probe_z_rotation_deg
                                (/probe_scan_motion_node, where probe_scan_motion.launch loads
                                probe_calibration.yaml; start that node first)
@@ -70,6 +84,7 @@ Parameters (private), in addition to those of controller_rosnode.py:
   ~level_tol_deg               remaining turn at which the levelling ends (0.5)
   ~stop_in_plane               move into the fitted plane and stop there (True); False: run the
                                controller's own align, centre_again and track phases
+  ~plane_steps                 commands for the move into the plane (the controller's align_steps, 5)
   ~plane_tol_mm, ~plane_tol_deg  remaining motion at which the probe is in the plane (0.5, 0.5)
   ~max_step_m, ~max_rotation_deg  as in controller_rosnode.py, but no limit by default (for
                                simulation); set them (0.005, 10.0) on the real robot
@@ -79,8 +94,10 @@ Parameters (private), in addition to those of controller_rosnode.py:
 Requires lwr_controllers (for PoseRPY) in addition to the requirements of controller_rosnode.py.
 """
 
+import bisect
 import sys
 import threading
+from collections import deque
 
 import numpy as np
 import rospy
@@ -90,8 +107,10 @@ from sensor_msgs.msg import Image
 
 from view_transition_rl.simulation.geometry import euler_from_pose, rotation_xyz
 from view_transition_rl.visual_servoing.controller_rosnode import DEPTH_KEYS, PROBE_KEYS, START_KEYS, mask_from_msg
-from view_transition_rl.visual_servoing.controllers import (SequentialController, contact_motion, rotation_matrix,
-                                                            rotation_vector)
+from view_transition_rl.visual_servoing.controllers import (NoIncrementsController, SequentialController,
+                                                            contact_motion, rotation_matrix, rotation_vector)
+
+CONTROLLER_TYPES = {"no_increments": NoIncrementsController, "sequential": SequentialController}
 
 
 def pose_matrix(xyz_mm, roll, pitch, yaw):
@@ -153,16 +172,21 @@ class TooltipServoNode(object):
         self.dry_run = rospy.get_param('~dry_run', False)
         self.calibration_ns = rospy.get_param('~calibration_ns', '/probe_scan_motion_node')
         self.tooltip_to_probe = tooltip_to_probe_from_calibration(self.calibration_ns)
+        controller_type = rospy.get_param('~controller_type', 'no_increments')
         controller_kwargs = dict(rospy.get_param('~controller', {}))
         controller_kwargs.setdefault('fov_mm', self.fov_mm)
 
-        self.controller = SequentialController(**controller_kwargs)
+        self.controller = CONTROLLER_TYPES[controller_type](**controller_kwargs)
         self.controller.reset()
+        self.plane_steps = rospy.get_param('~plane_steps', self.controller.align_steps)
+        self._turning = False  # a continuous turn is running: masks are streamed to the controller
+        self._plot_time = -np.inf
         self.running = False  # the controller only runs after Enter
         self.levelled = False  # the controller only runs after levelling
         self._level_error = None  # tooltip roll error before the last levelling command
         self._plane_target = None  # probe pose (mm) in the fitted image plane, with ~stop_in_plane
         self._plane_error = None  # remaining motion into the plane before the last command
+        self._plane_moves = 0  # commands sent towards the plane so far
         self.done = False
         self._start_requested = False
         self._last_command_time = -np.inf
@@ -190,6 +214,8 @@ class TooltipServoNode(object):
         self._rest_pose, self._still_since = None, -np.inf
         self._anchor = None  # first pose received: the window's frame
         self._latest = None  # (mask msg, time, pose, pose time, at rest since) of the latest mask
+        self._masks = deque(maxlen=300)  # (mask msg, stamp) of every mask, consumed during a turn
+        self._pose_history = deque(maxlen=5000)  # (time, pose) for the pose at a mask's stamp
         self.action_pub = rospy.Publisher(self.action_topic, Twist, queue_size=1)
         rospy.Subscriber(self.pose_topic, PoseRPY, self._on_pose, queue_size=10)
         rospy.Subscriber(self.mask_topic, Image, self._on_mask, queue_size=1)
@@ -213,10 +239,30 @@ class TooltipServoNode(object):
             if moved_mm > self.still_mm or turned > self.still_rad:
                 self._rest_pose, self._still_since = pose, now
             self._pose, self._pose_time = pose, now
+            self._pose_history.append((now, pose))
 
     def _on_mask(self, msg):
+        now = rospy.get_time()
         with self._lock:
-            self._latest = (msg, rospy.get_time(), self._pose, self._pose_time, self._still_since)
+            self._latest = (msg, now, self._pose, self._pose_time, self._still_since)
+            self._masks.append((msg, msg.header.stamp.to_sec() or now))
+
+    def _pose_at(self, t):
+        """Probe pose at time t, interpolated between the received poses; None if they do not cover t."""
+        with self._lock:
+            history = list(self._pose_history)
+        if not history or t < history[0][0] or t > history[-1][0] + self.max_pose_age_sec:
+            return None
+        i = bisect.bisect_right([time for time, _ in history], t)
+        if i == len(history):
+            return history[-1][1]
+        (t0, p0), (t1, p1) = history[i - 1], history[i]
+        fraction = (t - t0) / (t1 - t0) if t1 > t0 else 0.0
+        delta = np.linalg.inv(p0) @ p1
+        part = np.eye(4)
+        part[:3, :3] = rotation_matrix(fraction * rotation_vector(delta[:3, :3]))
+        part[:3, 3] = fraction * delta[:3, 3]
+        return p0 @ part
 
     def _read_terminal(self):
         while not rospy.is_shutdown():
@@ -233,6 +279,7 @@ class TooltipServoNode(object):
             return
         state = ("FINISHED" if self.done else "PAUSED - Enter: start the controller" if not self.running
                  else "LEVELLING - Enter: pause" if not self.levelled
+                 else "TURNING, recording every mask - Enter: pause" if self._turning
                  else "MOVING INTO THE FITTED PLANE - Enter: pause" if self._plane_target is not None
                  else "RUNNING - Enter: pause")
         self.view.set_help(f"{state}\n"
@@ -254,7 +301,11 @@ class TooltipServoNode(object):
                     next_command = rospy.get_time()  # first step right away
                     rospy.loginfo("tooltip_servo: controller %s", "started" if self.running else "paused")
                     self._update_help()
-            if self.running and not self.done and rospy.get_time() >= next_command:
+            if self.running and not self.done and self._turning:
+                stepped = self.record_turn()  # None while the turn runs
+                if stepped is not None:
+                    next_command = rospy.get_time() + (self.command_period_sec if stepped else 0.2)
+            elif self.running and not self.done and rospy.get_time() >= next_command:
                 # Retry soon if there was no usable mask or pose yet, otherwise wait a full period.
                 stepped = (self.level() if not self.levelled else
                            self.move_to_plane() if self._plane_target is not None else self.step())
@@ -329,9 +380,7 @@ class TooltipServoNode(object):
             rospy.loginfo_throttle(5.0, "tooltip_servo: waiting for a mask taken with the probe at rest")
             return False
 
-        mask = mask_from_msg(mask_msg)
-        if self.image_x_sign < 0:
-            mask = mask[:, ::-1]  # so that columns increase along probe +X, as the controller expects
+        mask = self._mask_array(mask_msg)
         vessel_pixels = int(np.count_nonzero(mask))
         if vessel_pixels < self.min_vessel_pixels:
             rospy.logwarn("tooltip_servo: vessel not visible enough (%d px); holding", vessel_pixels)
@@ -340,7 +389,53 @@ class TooltipServoNode(object):
         self._move_controller_to(pose)
         action = self.controller(mask)
         self._update_plot()
-        if self.stop_in_plane and self.controller.phase_name not in ("centre", "rotate"):
+        return self._use(action)
+
+    def record_turn(self):
+        """During a continuous turn: give the controller every new mask, each with the probe pose at its
+        stamp. Returns None while the turn runs, then what _use() returns for the controller's next action."""
+        with self._lock:
+            masks = list(self._masks)
+            self._masks.clear()
+        for mask_msg, stamp in masks:
+            pose = self._pose_at(stamp)
+            if pose is None:
+                rospy.logwarn_throttle(5.0, "tooltip_servo: turn: no pose around a mask's stamp; mask skipped")
+                continue
+            mask = self._mask_array(mask_msg)
+            if np.count_nonzero(mask) < self.min_vessel_pixels:
+                rospy.logwarn_throttle(5.0, "tooltip_servo: turn: vessel not visible enough; mask skipped")
+                continue
+            self._move_controller_to(pose, quiet=True)
+            action = self.controller(mask)
+            if self.controller.phase_name != "turn":  # the controller ended the turn and handed over
+                self._turning = False
+                rospy.loginfo("tooltip_servo: turn finished, %d frames recorded", len(self.controller.cloud))
+                self._update_plot()
+                self._update_help()
+                return self._use(action)
+        if rospy.get_time() > self._plot_time + 0.5:
+            self._update_plot()
+            self._plot_time = rospy.get_time()
+        if self._pose_at_rest("turn") is not None:  # stopped short of the turn: end it at the next mask
+            self.controller.turn_stopped()
+        return None
+
+    def _mask_array(self, mask_msg):
+        mask = mask_from_msg(mask_msg)
+        return mask[:, ::-1] if self.image_x_sign < 0 else mask  # columns along probe +X, as the controller expects
+
+    def _use(self, action):
+        """Act on the controller's action; returns False if the next step should follow right away."""
+        if self.controller.phase_name == "turn" and not self._turning and action is not None:
+            # The whole turn as one motion; the masks seen while it runs are recorded by record_turn().
+            with self._lock:
+                self._masks.clear()
+            self._send(action, "turn")
+            self._turning = True
+            self._update_help()
+            return True
+        if self.stop_in_plane and self.controller.phase_name not in ("centre", "rotate", "turn"):
             # The controller has just fitted the cylinder and planned its alignment (or failed to):
             # move straight into the fitted plane instead of its align, centre_again and track phases.
             if self.controller.align_target is None:
@@ -349,6 +444,7 @@ class TooltipServoNode(object):
                               "stopping")
             else:
                 self._plane_target = self._frame_pose @ self.controller.align_target
+                self._plane_moves = 0
                 rospy.loginfo("tooltip_servo: plane fitted; moving into it")
             self._update_help()
             return False  # first move right away
@@ -356,13 +452,13 @@ class TooltipServoNode(object):
             self.done = True
             rospy.loginfo("tooltip_servo: sequence finished")
             self._update_help()
-        else:
+        elif np.any(action):  # a zero action has nothing to send
             self._send(action, self.controller.phase_name)
         return True
 
     def move_to_plane(self):
-        """After the fit (~stop_in_plane): one command moving the probe straight to the planned pose in
-        the fitted image plane, closed loop on the measured pose; returns False if it sent nothing."""
+        """After the fit (~stop_in_plane): one command moving the probe towards the planned pose in the
+        fitted image plane, closed loop on the measured pose; returns False if it sent nothing."""
         pose = self._pose_at_rest("moving into the plane")
         if pose is None:
             return False
@@ -382,21 +478,25 @@ class TooltipServoNode(object):
             self._update_help()
             return False
         self._plane_error = error
-        self._publish(remaining[:3, 3], rotation_vector(remaining[:3, :3]), "plane")
+        # Like the controller's align phase: 1 / (commands left) of the remaining motion; the last
+        # planned command, and any correction after it, covers all of it.
+        fraction = 1.0 / max(1, self.plane_steps - self._plane_moves)
+        self._plane_moves += 1
+        self._publish(fraction * remaining[:3, 3], fraction * rotation_vector(remaining[:3, :3]), "plane")
         if self.dry_run:
             self.done = True  # the probe does not move
             self._update_help()
         return True
 
-    def _move_controller_to(self, pose):
+    def _move_controller_to(self, pose, quiet=False):
         """Report the measured motion since the controller's last step; its reconstruction then
-        lives in the probe frame at pose."""
+        lives in the probe frame at pose. quiet: log at debug level (masks streamed during a turn)."""
         if self._frame_pose is not None:
             delta = np.linalg.inv(self._frame_pose) @ pose  # probe frame before the move
             self.controller.apply_motion(delta)
             moved_mm, turned = motion_size(delta)
-            rospy.loginfo("tooltip_servo: measured motion since the last step: %.2f mm, %.2f deg",
-                          moved_mm, np.rad2deg(turned))
+            (rospy.logdebug if quiet else rospy.loginfo)(
+                "tooltip_servo: measured motion since the last step: %.2f mm, %.2f deg", moved_mm, np.rad2deg(turned))
         self._frame_pose = pose
 
     def _robot_busy(self):
