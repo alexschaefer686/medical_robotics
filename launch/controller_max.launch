@@ -7,7 +7,10 @@
   <arg name="action_topic" default="/probe_action"/>
 
   <!-- Mask history and timing; the period must stay longer than the probe motion node's step duration. -->
-  <arg name="history_length" default="10"/>
+  <arg name="history_length" default="20"/>
+  <!-- Starting procedure: history_length turns about the probe axis, this much in total, fill the
+       history with history_length area changes. -->
+  <arg name="start_turn_deg" default="20.0"/>
   <arg name="command_period_sec" default="4.0"/>
   <arg name="settle_sec" default="3.0"/>
 
@@ -25,6 +28,7 @@
     <param name="mask_topic" value="$(arg mask_topic)"/>
     <param name="action_topic" value="$(arg action_topic)"/>
     <param name="history_length" value="$(arg history_length)"/>
+    <param name="start_turn_deg" value="$(arg start_turn_deg)"/>
     <param name="command_period_sec" value="$(arg command_period_sec)"/>
     <param name="settle_sec" value="$(arg settle_sec)"/>
     <param name="image_x_sign" value="$(arg image_x_sign)"/>
