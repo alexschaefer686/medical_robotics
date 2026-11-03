@@ -1,0 +1,33 @@
+<launch>
+  <!-- Kinetic's system Python 3.5 cannot parse this Python >=3.10 project. -->
+  <arg name="python_executable" default="/home/wu/anaconda3/envs/vtrl/bin/python"/>
+
+  <!-- Input/output topics. -->
+  <arg name="mask_topic" default="/vessel_segmentation_node/vessel_mask"/>
+  <arg name="action_topic" default="/probe_action"/>
+
+  <!-- Mask history and timing; the period must stay longer than the probe motion node's step duration. -->
+  <arg name="history_length" default="10"/>
+  <arg name="command_period_sec" default="4.0"/>
+  <arg name="settle_sec" default="3.0"/>
+
+  <arg name="image_x_sign" default="-1.0"/>
+  <arg name="dry_run" default="false"/>
+
+  <node pkg="medical_robotics"
+        type="controller_max_rosnode.py"
+        name="controller_max_node"
+        clear_params="true"
+        launch-prefix="$(arg python_executable)"
+        output="screen">
+    <env name="PYTHONPATH" value="$(find medical_robotics)/src:$(optenv PYTHONPATH)"/>
+
+    <param name="mask_topic" value="$(arg mask_topic)"/>
+    <param name="action_topic" value="$(arg action_topic)"/>
+    <param name="history_length" value="$(arg history_length)"/>
+    <param name="command_period_sec" value="$(arg command_period_sec)"/>
+    <param name="settle_sec" value="$(arg settle_sec)"/>
+    <param name="image_x_sign" value="$(arg image_x_sign)"/>
+    <param name="dry_run" value="$(arg dry_run)"/>
+  </node>
+</launch>
