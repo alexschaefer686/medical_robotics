@@ -136,7 +136,7 @@ class MaxControllerNode(object):
         weights = np.hamming(2 * self.hist_N)[:self.hist_N]  # rising half: newest weighs most
         w_change = np.sum(weights * scaled_area_changes)/np.sum(weights)  # rising half: newest weighs most
 
-        if abs(w_change) < 40: #pixels per rad
+        if abs(w_change) < 400: #pixels per rad
             rospy.loginfo("controller_max: area changes ~0, max found, no twist sent")
             return None
 
